@@ -1,0 +1,59 @@
+export interface IApiResponse<T = any> {
+  meta: {
+    code: number;
+    status: string;
+    message: string;
+  };
+  data: T;
+}
+
+export interface IApiError {
+  meta: {
+    code: number;
+    status: string;
+    message: string;
+  };
+  data: null;
+}
+
+export type TRole = "admin" | "kasir";
+
+export interface IUser {
+  _id: string;
+  username: string;
+  role: TRole;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ITokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface ILoginRequest {
+  username: string;
+  password: string;
+  fcmToken?: string;
+}
+
+export interface IRefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface IChangePasswordRequest {
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface IUpdateFcmTokenRequest {
+  fcmToken: string;
+}
+
+export type ILoginResponse = IApiResponse<ITokens>;
+
+export type IProfileResponse = IApiResponse<IUser>;
+
+export type ISuccessResponse = IApiResponse<null>;
