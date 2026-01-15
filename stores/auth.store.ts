@@ -33,8 +33,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     try {
       const token = await getToken("access");
+
       if (!token) {
-        set({ user: null, isAuthenticated: false, isLoading: false });
+        set({ user: null, isAuthenticated: false });
         return;
       }
 
@@ -43,13 +44,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         user: response.data,
         isAuthenticated: true,
-        isLoading: false,
       });
     } catch (err) {
-      console.log("Inisialisasi Gagal:", err);
 
       await clearTokens();
       set({ user: null, isAuthenticated: false, isLoading: false });
+    } finally {
+      set({ isLoading: false });
     }
   },
 }));
