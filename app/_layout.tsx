@@ -2,9 +2,8 @@ import { toast as toastConfig } from "@/components/toast";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import { useAuthStore } from "@/stores/auth.store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
 import Toast from "react-native-toast-message";
 import "../global.css";
 
@@ -17,6 +16,8 @@ const queryClient = new QueryClient({
   },
 });
 
+SplashScreen.preventAutoHideAsync();
+
 function InitialLayout() {
   const { isLoading, initializeAction } = useAuthStore();
 
@@ -26,13 +27,11 @@ function InitialLayout() {
 
   useProtectedRoute();
 
-  if (isLoading) {
-    return (
-      <View className="items-center justify-center flex-1 bg-white">
-        <ActivityIndicator size="large" color="#10b981" />
-      </View>
-    );
-  }
+  useEffect(() => {
+    if (!isLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

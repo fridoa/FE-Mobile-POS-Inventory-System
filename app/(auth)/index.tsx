@@ -13,7 +13,6 @@ export default function Login() {
       <SafeAreaView className="flex-1">
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
           <ScrollView contentContainerStyle={{ flexGrow: 1 }} bounces={false} showsVerticalScrollIndicator={false}>
-            {/* Header Section */}
             <View className="h-[25vh] justify-center px-6">
               <View className="absolute w-48 h-48 bg-white rounded-full opacity-20 -top-10 -right-10" />
               <View className="absolute w-32 h-32 bg-white rounded-full opacity-10 top-20 -left-10" />
@@ -22,12 +21,10 @@ export default function Login() {
               <Text className="text-lg text-emerald-100">Securely log in to manage your inventory.</Text>
             </View>
 
-            {/* Form Section */}
             <View className="flex-1 bg-white rounded-t-[40px] px-8 pt-10 pb-8 shadow-2xl">
               <Text className="mb-8 text-2xl font-bold text-center text-gray-800">Sign In</Text>
 
               <View className="gap-5">
-                {/* Username Input */}
                 <View className="gap-2">
                   <Controller
                     control={control}
@@ -42,7 +39,6 @@ export default function Login() {
                   {errors.username && <Text className="ml-1 text-xs text-red-500">{errors.username.message}</Text>}
                 </View>
 
-                {/* Password Input */}
                 <View className="gap-2">
                   <Controller
                     control={control}
@@ -58,7 +54,6 @@ export default function Login() {
                   {errors.password && <Text className="ml-1 text-xs text-red-500">{errors.password.message}</Text>}
                 </View>
 
-                {/* Forgot Password & Options */}
                 <View className="flex-row items-center justify-end mt-1">
                   <TouchableOpacity>
                     <Text className="text-sm font-semibold text-emerald-600">Forgot Password?</Text>
@@ -67,13 +62,12 @@ export default function Login() {
 
                 
 
-                {/* Login Button */}
                 <TouchableOpacity
                   onPress={handleSubmit(handleLogin)}
                   disabled={isPending}
                   className={`h-14 rounded-2xl flex-row justify-center items-center mt-4 shadow-lg shadow-emerald-200 ${isPending ? "bg-emerald-400" : "bg-[#059669]"}`}
                 >
-                  {isPending ? <ActivityIndicator color="white" /> : <Text className="text-lg font-bold text-white">Login</Text>}
+                  {isPending ? <ActivityIndicator color="white" /> : <Text className="text-lg font-bold text-white">Masuk</Text>}
                 </TouchableOpacity>
 
                 
