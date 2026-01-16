@@ -2,7 +2,7 @@ import { AlertCircle, HelpCircle, X } from "lucide-react-native";
 import React from "react";
 import { Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
 
-interface CustomAlertProps {
+ export interface CustomAlertProps {
   isVisible: boolean;
   type: "danger" | "primary";
   title: string;
@@ -10,7 +10,7 @@ interface CustomAlertProps {
   confirmText: string;
   cancelText?: string;
   onConfirm: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
 }
 
 const CustomAlert = ({ isVisible, type, title, message, confirmText, cancelText = "Cancel", onConfirm, onCancel }: CustomAlertProps) => {

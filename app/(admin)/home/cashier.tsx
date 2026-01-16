@@ -7,37 +7,62 @@ import { Controller } from "react-hook-form";
 import { ActivityIndicator, RefreshControl, StatusBar, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// --- Internal Imports ---
 import CashierCard from "@/components/CashierCard";
-import CustomAlert from "@/components/CustomAlert";
+import CustomAlert, { CustomAlertProps } from "@/components/CustomAlert";
 import ActionModal from "@/components/ui/ActionModal";
 import FloatingAddButton from "@/components/ui/FloatingAddButton";
 import FormInput from "@/components/ui/FormInput";
-import { useAddCashier } from "@/hooks/useAddCashier";
+import { useCashierForm } from "@/hooks/useCashierForm";
 import { useDebounce } from "@/hooks/useDebounce";
 import userService from "@/services/user.service";
 import { IUser } from "@/types/User";
 
 const CashierPage = () => {
   const router = useRouter();
-
-  // --- UI States ---
   const [modalVisible, setModalVisible] = useState(false);
+  const [editingUser, setEditingUser] = useState<IUser | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 500);
 
-  const [alertConfig, setAlertConfig] = useState({
-    visible: false,
+  const [alertConfig, setAlertConfig] = useState<CustomAlertProps>({
+    isVisible: false,
     type: "primary" as "primary" | "danger",
     title: "",
     message: "",
+    confirmText: "Lanjutkan",
     onConfirm: () => {},
+    onCancel: () => {},
   });
 
-  // --- Data & Form Hooks ---
-  const { control, handleSubmit, handleAddCashier, isPending, errors, reset, formState } = useAddCashier(() => {
+  const { control, handleSubmit, createCashier, updateCashier, deleteCashier, isPending, errors, reset, formState } = useCashierForm(!!editingUser, () => {
     setModalVisible(false);
+    setEditingUser(null);
+    reset();
   });
+
+  const handleEdit = (user: IUser) => {
+    setEditingUser(user);
+    setModalVisible(true);
+    reset({ name: user.name, username: user.username, password: "" });
+  };
+
+  const handleDelete = (_id: string, closeSwipe: () => void) => {
+    setAlertConfig((prev) => ({
+      ...prev,
+      isVisible: true,
+      type: "danger",
+      title: "Hapus Kasir",
+      message: "Data kasir ini akan dihapus permanen. Lanjutkan?",
+      onConfirm: () => {
+        deleteCashier(_id);
+        setAlertConfig((p) => ({ ...p, isVisible: false }));
+      },
+      onCancel: () => {
+        setAlertConfig((p) => ({ ...p, isVisible: false }));
+        closeSwipe();
+      },
+    }));
+  };
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["cashiers"],
@@ -47,7 +72,6 @@ const CashierPage = () => {
     },
   });
 
-  // --- Performa: Memoized Filtering ---
   const filteredData = useMemo(() => {
     const list = Array.isArray(data) ? data : [];
     return list.filter((item: IUser) => {
@@ -60,39 +84,47 @@ const CashierPage = () => {
     });
   }, [data, debouncedSearch]);
 
-  // --- Event Handlers ---
-
-  // Proteksi UX: Mencegah data hilang jika modal tertutup tidak sengaja
   const handleRequestClose = () => {
     if (formState.isDirty) {
-      setAlertConfig({
-        visible: true,
+      setAlertConfig((prev) => ({
+        ...prev,
+        isVisible: true,
         type: "danger",
         title: "Batalkan?",
         message: "Perubahan akan dihapus. Yakin ingin membatalkan?",
         onConfirm: () => {
-          setAlertConfig((prev) => ({ ...prev, visible: false }));
+          setAlertConfig((p) => ({ ...p, isVisible: false }));
           setModalVisible(false);
           reset();
         },
-      });
+        onCancel: () => setAlertConfig((p) => ({ ...p, isVisible: false })),
+      }));
     } else {
       setModalVisible(false);
+      setEditingUser(null);
     }
   };
 
-  // Trigger alert konfirmasi sebelum eksekusi API
   const onPreSubmit = (formData: any) => {
-    setAlertConfig({
-      visible: true,
+    const isEdit = !!editingUser;
+    setAlertConfig((prev) => ({
+      ...prev,
+      isVisible: true,
       type: "primary",
-      title: "Simpan Kasir",
-      message: "Apakah data kasir yang dimasukkan sudah benar?",
+      title: isEdit ? "Update Kasir" : "Simpan Kasir",
+      message: isEdit ? "Apakah perubahan data kasir sudah benar?" : "Apakah data kasir baru yang dimasukkan sudah benar?",
       onConfirm: () => {
-        setAlertConfig((prev) => ({ ...prev, visible: false }));
-        handleAddCashier(formData);
+        setAlertConfig((p) => ({ ...p, isVisible: false }));
+        if (isEdit && editingUser?._id) {
+          // Bersihkan password jika kosong agar tidak menimpa password lama di server (tergantung backend)
+          const payload = { ...formData };
+          if (!payload.password) delete payload.password;
+          updateCashier({ id: editingUser._id, data: payload });
+        } else {
+          createCashier(formData);
+        }
       },
-    });
+    }));
   };
 
   return (
@@ -115,7 +147,6 @@ const CashierPage = () => {
           </View>
         </View>
 
-        {/* List Section (FlashList untuk Performa Tinggi) */}
         <View className="flex-1 px-6">
           {isLoading ? (
             <View className="items-center justify-center flex-1">
@@ -124,7 +155,7 @@ const CashierPage = () => {
           ) : (
             <FlashList
               data={filteredData}
-              renderItem={({ item }) => <CashierCard item={item} />}
+              renderItem={({ item }) => <CashierCard item={item} onEdit={handleEdit} onDelete={handleDelete} />}
               keyExtractor={(item) => item._id || item.username}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 100 }}
@@ -139,8 +170,7 @@ const CashierPage = () => {
           )}
         </View>
 
-        {/* Modal: Form Tambah Kasir */}
-        <ActionModal visible={modalVisible} onClose={handleRequestClose} onSubmit={handleSubmit(onPreSubmit)} title="Buat Kasir Baru" loading={isPending}>
+        <ActionModal visible={modalVisible} onClose={handleRequestClose} onSubmit={handleSubmit(onPreSubmit)} title={editingUser ? "Edit Data Kasir" : "Buat Kasir Baru"} loading={isPending}>
           <Controller
             control={control}
             name="name"
@@ -162,18 +192,16 @@ const CashierPage = () => {
           />
         </ActionModal>
 
-        {/* Global Modal Alert (Confirm/Delete) */}
-        <CustomAlert
-          isVisible={alertConfig.visible}
-          type={alertConfig.type}
-          title={alertConfig.title}
-          message={alertConfig.message}
-          confirmText="Lanjutkan"
-          onConfirm={alertConfig.onConfirm}
-          onCancel={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
-        />
+        <CustomAlert isVisible={alertConfig.isVisible} type={alertConfig.type} title={alertConfig.title} message={alertConfig.message} confirmText="Lanjutkan" onConfirm={alertConfig.onConfirm} onCancel={alertConfig.onCancel} />
 
-        <FloatingAddButton label="Tambah Kasir Baru" onPress={() => setModalVisible(true)} />
+        <FloatingAddButton
+          label="Tambah Kasir Baru"
+          onPress={() => {
+            setEditingUser(null);
+            reset({ name: "", username: "", password: "" });
+            setModalVisible(true);
+          }}
+        />
       </SafeAreaView>
     </View>
   );

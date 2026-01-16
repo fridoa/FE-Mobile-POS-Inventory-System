@@ -2,8 +2,9 @@ import { toast as toastConfig } from "@/components/toast";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import { useAuthStore } from "@/stores/auth.store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SplashScreen, Stack } from "expo-router";
-import { useEffect } from "react";
+import { SplashScreen, Stack, useRootNavigationState } from "expo-router";
+import { useEffect, useState } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 import "../global.css";
 
@@ -20,6 +21,8 @@ SplashScreen.preventAutoHideAsync();
 
 function InitialLayout() {
   const { isLoading, initializeAction } = useAuthStore();
+  const navigationState = useRootNavigationState();
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     initializeAction();
@@ -28,17 +31,21 @@ function InitialLayout() {
   useProtectedRoute();
 
   useEffect(() => {
-    if (!isLoading) {
+    const navigationReady = !!navigationState?.key;
+    
+    if (navigationReady && !isLoading) {
+      setIsReady(true);
       SplashScreen.hideAsync();
     }
-  }, [isLoading]);
-
+  }, [isLoading, navigationState?.key]);
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-      <Stack.Screen name="(cashier)" options={{ headerShown: false }} />
-    </Stack>
+    <GestureHandlerRootView className="flex-1">
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+        <Stack.Screen name="(cashier)" options={{ headerShown: false }} />
+      </Stack>
+    </GestureHandlerRootView>
   );
 }
 
