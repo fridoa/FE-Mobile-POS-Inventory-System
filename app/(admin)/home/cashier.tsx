@@ -116,7 +116,6 @@ const CashierPage = () => {
       onConfirm: () => {
         setAlertConfig((p) => ({ ...p, isVisible: false }));
         if (isEdit && editingUser?._id) {
-          // Bersihkan password jika kosong agar tidak menimpa password lama di server (tergantung backend)
           const payload = { ...formData };
           if (!payload.password) delete payload.password;
           updateCashier({ id: editingUser._id, data: payload });
