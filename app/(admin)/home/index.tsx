@@ -51,7 +51,11 @@ const AdminHomePage = () => {
                   icon={Layers}
                   // onPress={() => router.push("/(admin)/category")}
                 />
-                <MenuItem title="Kasir" icon={UserCog} />
+                <MenuItem 
+                title="Kasir" 
+                icon={UserCog} 
+                onPress={() => router.push("/(admin)/home/cashier")}
+                />
                 <MenuItem
                   title="Restock"
                   icon={PackagePlus}

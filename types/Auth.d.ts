@@ -18,14 +18,7 @@ export interface IApiError {
 
 export type TRole = "admin" | "kasir";
 
-export interface IUser {
-  _id: string;
-  username: string;
-  role: TRole;
-  isActive: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
+
 
 export interface ITokens {
   accessToken: string;
