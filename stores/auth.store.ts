@@ -1,5 +1,5 @@
 import authService from "@/services/auth.service";
-import { IUser } from "@/types/Auth";
+import { IUser } from "@/types/User";
 import { clearTokens, getToken, setTokens } from "@/utils/auth";
 import { create } from "zustand";
 

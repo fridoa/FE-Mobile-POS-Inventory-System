@@ -1,17 +1,24 @@
 import { Stack } from "expo-router";
-import React from "react";
-import { View } from "react-native";
 
 export default function AdminLayout() {
   return (
-    <View className="flex-1">
-      <Stack
-        screenOptions={{
-          headerShown: false, // Sembunyikan header bawaan agar desain custom Anda yang muncul
-          animation: "fade", // Animasi halus saat admin menu berubah
-          contentStyle: { backgroundColor: "white" },
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: "slide_from_right",
+        gestureEnabled: true,
+      }}
+    >
+      <Stack.Screen name="home/index" />
+
+      <Stack.Screen
+        name="home/cashier"
+        options={{
+          animation: "slide_from_right",
+          presentation: "card",
         }}
       />
-    </View>
+
+    </Stack>
   );
 }
