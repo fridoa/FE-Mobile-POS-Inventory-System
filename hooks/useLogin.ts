@@ -1,9 +1,10 @@
 import authService from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { ILoginRequest } from "@/types/Auth";
-import { setTokens } from "@/utils/auth";
+import { IUser } from "@/types/User";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation } from "@tanstack/react-query";
+import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Toast from "react-native-toast-message";
@@ -33,14 +34,20 @@ export const useLogin = () => {
   const mutation = useMutation({
     mutationFn: async (payload: ILoginRequest) => {
       const loginResponse = await authService.login(payload);
+
       const { accessToken, refreshToken } = loginResponse.data;
 
-      await setTokens(accessToken, refreshToken);
+      const decodedToken: any = jwtDecode(accessToken);
 
-      const profileResponse = await authService.getProfile();
+      const minimalUser: Partial<IUser> = {
+        _id: decodedToken._id,
+        role: decodedToken.role,
+
+        username: decodedToken.username || payload.username,
+      };
 
       return {
-        user: profileResponse.data,
+        user: minimalUser as IUser,
         accessToken,
         refreshToken,
       };
@@ -51,15 +58,15 @@ export const useLogin = () => {
 
       Toast.show({
         type: "success",
-        text1: "Login Successfull",
-        text2: "Welcome back!👋",
+        text1: "Login Berhasil",
+        text2: `Selamat datang kembali!`,
       });
 
       reset();
     },
 
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.message || error?.response?.data?.meta?.message || "Terjadi kesalahan saat login";
+      const errorMessage = error?.response?.data?.meta?.message || error?.response?.data?.message || "Terjadi kesalahan pada sistem server";
 
       setError("root", {
         message: errorMessage,
@@ -67,7 +74,7 @@ export const useLogin = () => {
 
       Toast.show({
         type: "error",
-        text1: "Login Failed",
+        text1: "Login Gagal",
         text2: errorMessage,
       });
     },

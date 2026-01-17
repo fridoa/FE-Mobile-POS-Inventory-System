@@ -1,6 +1,5 @@
-export interface IApiResponse<T = any> {
+export interface IApiResponse<T> {
   meta: {
-    code: number;
     status: string;
     message: string;
   };
