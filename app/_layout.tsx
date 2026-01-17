@@ -11,8 +11,12 @@ import "../global.css";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 15,
       refetchOnWindowFocus: false,
-      retry: false,
+      refetchOnReconnect: true,
+      refetchOnMount: true,
+      retry: 1,
     },
   },
 });
@@ -32,7 +36,7 @@ function InitialLayout() {
 
   useEffect(() => {
     const navigationReady = !!navigationState?.key;
-    
+
     if (navigationReady && !isLoading) {
       setIsReady(true);
       SplashScreen.hideAsync();

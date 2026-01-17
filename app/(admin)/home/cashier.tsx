@@ -1,10 +1,10 @@
 import { FlashList } from "@shopify/flash-list";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { ArrowLeft, Search, UserCog } from "lucide-react-native";
+import { UserCog } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import { Controller } from "react-hook-form";
-import { ActivityIndicator, RefreshControl, StatusBar, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, RefreshControl, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CashierCard from "@/components/CashierCard";
@@ -12,6 +12,8 @@ import CustomAlert, { CustomAlertProps } from "@/components/CustomAlert";
 import ActionModal from "@/components/ui/ActionModal";
 import FloatingAddButton from "@/components/ui/FloatingAddButton";
 import FormInput from "@/components/ui/FormInput";
+import PageHeader from "@/components/ui/PageHeader";
+import SearchBar from "@/components/ui/SearchBar";
 import { useCashierForm } from "@/hooks/useCashierForm";
 import { useDebounce } from "@/hooks/useDebounce";
 import userService from "@/services/user.service";
@@ -130,21 +132,9 @@ const CashierPage = () => {
     <View className="flex-1 bg-gray-50">
       <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
-        {/* Header Section */}
-        <View className="flex-row items-center px-6 py-4 bg-white border-b border-gray-100">
-          <TouchableOpacity onPress={() => router.back()} className="p-1 mr-4 rounded-full bg-gray-50">
-            <ArrowLeft size={24} color="#374151" />
-          </TouchableOpacity>
-          <Text className="text-xl font-bold text-gray-800">Manajemen Kasir</Text>
-        </View>
+        <PageHeader title="Manajemen Kasir" />
 
-        {/* Search Bar */}
-        <View className="px-6 py-4">
-          <View className="flex-row items-center px-4 py-3 bg-white border border-gray-200 shadow-sm rounded-xl">
-            <Search size={20} color="#9CA3AF" />
-            <TextInput className="flex-1 ml-3 text-base text-gray-800" placeholder="Cari nama atau username..." value={searchQuery} onChangeText={setSearchQuery} autoCorrect={false} />
-          </View>
-        </View>
+        <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Cari nama atau username..." />
 
         <View className="flex-1 px-6">
           {isLoading ? (
