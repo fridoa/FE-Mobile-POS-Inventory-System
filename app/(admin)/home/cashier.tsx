@@ -1,14 +1,13 @@
 import { FlashList } from "@shopify/flash-list";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
 import { UserCog } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import { Controller } from "react-hook-form";
 import { ActivityIndicator, RefreshControl, StatusBar, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import CashierCard from "@/components/CashierCard";
 import CustomAlert, { CustomAlertProps } from "@/components/CustomAlert";
+import ScreenWrapper from "@/components/ScreenWrapper";
 import ActionModal from "@/components/ui/ActionModal";
 import FloatingAddButton from "@/components/ui/FloatingAddButton";
 import FormInput from "@/components/ui/FormInput";
@@ -20,7 +19,6 @@ import userService from "@/services/user.service";
 import { IUser } from "@/types/User";
 
 const CashierPage = () => {
-  const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState<IUser | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,17 +72,22 @@ const CashierPage = () => {
     },
   });
 
-  const filteredData = useMemo(() => {
-    const list = Array.isArray(data) ? data : [];
-    return list.filter((item: IUser) => {
-      const isCashier = item.role === "kasir";
-      if (!debouncedSearch) return isCashier;
+const filteredData = useMemo(() => {
+  const list = Array.isArray(data) ? data : [];
+  
+  const filtered = list.filter((item: IUser) => {
+    const isCashier = item.role === "kasir";
+    if (!debouncedSearch) return isCashier;
+    
+    const searchMatch = 
+      item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
+      item.username.toLowerCase().includes(debouncedSearch.toLowerCase());
+    
+    return isCashier && searchMatch;
+  });
 
-      const searchMatch = item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || item.username.toLowerCase().includes(debouncedSearch.toLowerCase());
-
-      return isCashier && searchMatch;
-    });
-  }, [data, debouncedSearch]);
+  return filtered.sort((a, b) => a.name.localeCompare(b.name));
+}, [data, debouncedSearch]);
 
   const handleRequestClose = () => {
     if (formState.isDirty) {
@@ -129,9 +132,10 @@ const CashierPage = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
+    <ScreenWrapper>
+      <View className="flex-1 bg-gray-50">
+        <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+
         <PageHeader title="Manajemen Kasir" />
 
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Cari nama atau username..." />
@@ -184,15 +188,15 @@ const CashierPage = () => {
         <CustomAlert isVisible={alertConfig.isVisible} type={alertConfig.type} title={alertConfig.title} message={alertConfig.message} confirmText="Lanjutkan" onConfirm={alertConfig.onConfirm} onCancel={alertConfig.onCancel} />
 
         <FloatingAddButton
-          label="Tambah Kasir Baru"
+          label="Tambah"
           onPress={() => {
             setEditingUser(null);
             reset({ name: "", username: "", password: "" });
             setModalVisible(true);
           }}
         />
-      </SafeAreaView>
-    </View>
+      </View>
+    </ScreenWrapper>
   );
 };
 

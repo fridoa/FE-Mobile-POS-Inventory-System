@@ -4,10 +4,10 @@ import { Layers } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import { Controller } from "react-hook-form";
 import { ActivityIndicator, RefreshControl, StatusBar, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import CategoryCard from "@/components/CategoryCard";
 import CustomAlert, { CustomAlertProps } from "@/components/CustomAlert";
+import ScreenWrapper from "@/components/ScreenWrapper";
 import ActionModal from "@/components/ui/ActionModal";
 import FloatingAddButton from "@/components/ui/FloatingAddButton";
 import FormInput from "@/components/ui/FormInput";
@@ -51,8 +51,21 @@ const CategoryPage = () => {
 
   const filteredData = useMemo(() => {
     const list = Array.isArray(data) ? data : [];
-    if (!debouncedSearch) return list;
-    return list.filter((item: ICategory) => item.name.toLowerCase().includes(debouncedSearch.toLowerCase()));
+    if (list.length === 0) return [];
+
+    const sorted = [...list].sort((a, b) => {
+      const nameA = (a.name || "").trim();
+      const nameB = (b.name || "").trim();
+
+      return nameA.localeCompare(nameB, undefined, {
+        sensitivity: "base",
+        numeric: true,
+      });
+    });
+
+    if (!debouncedSearch) return sorted;
+
+    return sorted.filter((cat: ICategory) => cat.name.toLowerCase().includes(debouncedSearch.toLowerCase()));
   }, [data, debouncedSearch]);
 
   const handleEdit = (category: ICategory) => {
@@ -122,9 +135,9 @@ const CategoryPage = () => {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
+    <ScreenWrapper>
+      <View className="flex-1 bg-gray-50">
+        <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
         <PageHeader title="Manajemen Kategori" />
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Cari kategori..." />
 
@@ -162,15 +175,15 @@ const CategoryPage = () => {
         <CustomAlert {...alertConfig} />
 
         <FloatingAddButton
-          label="Kategori Baru"
+          label="Tambah"
           onPress={() => {
             setEditingCategory(null);
             reset({ name: "" });
             setModalVisible(true);
           }}
         />
-      </SafeAreaView>
-    </View>
+      </View>
+    </ScreenWrapper>
   );
 };
 
