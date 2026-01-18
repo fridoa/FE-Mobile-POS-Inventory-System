@@ -45,7 +45,7 @@ const AdminHomePage = () => {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
               <Text className="mb-4 ml-2 text-xs font-bold tracking-widest text-gray-400 uppercase">Manajemen</Text>
               <View className="flex-row flex-wrap justify-between">
-                <MenuItem title="Produk" icon={Box} onPress={() => router.push("/(admin)/product")} />
+                <MenuItem title="Produk" icon={Box} onPress={() => router.push("/(admin)/home/product")} />
                 <MenuItem title="Kategori" icon={Layers} onPress={() => router.push("/(admin)/home/category")} />
                 <MenuItem title="Kasir" icon={UserCog} onPress={() => router.push("/(admin)/home/cashier")} />
                 <MenuItem
