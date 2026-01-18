@@ -1,28 +1,50 @@
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { PackagePlus, Store, User } from "lucide-react-native";
-import React from "react";
+import React, { memo } from "react";
 import { TouchableOpacity, View } from "react-native";
 
 const NavigationBar = () => {
   const router = useRouter();
+  const pathname = usePathname();
+
+  const ACTIVE_COLOR = "#059669";
+  const INACTIVE_COLOR = "#ffffff";
+
+  const navItems = [
+    {
+      id: "home",
+      path: "/home",
+      Icon: Store,
+      size: 22,
+    },
+    {
+      id: "inventory",
+      path: "/inventory",
+      Icon: PackagePlus,
+      size: 24,
+    },
+    {
+      id: "profile",
+      path: "/profile",
+      Icon: User,
+      size: 24,
+    },
+  ];
+
   return (
-    <View className="absolute z-10 flex-row items-center justify-around h-16 px-2 bg-white border border-gray-100 rounded-full shadow-xl bottom-6 left-6 right-6 shadow-gray-200">
-      <TouchableOpacity className="items-center justify-center w-12 h-12 rounded-full shadow-lg bg-emerald-600 shadow-emerald-200" activeOpacity={0.8}>
-        <Store size={22} color="white" />
-      </TouchableOpacity>
+    <View className="absolute z-10 flex-row items-center justify-around h-16 px-2 border rounded-full shadow-xl bottom-6 misal w-[70%] self-center bg-emerald-600 shadow-emerald-200 border-emerald-500/20">
+      {navItems.map((item) => {
+        const isActive = pathname.includes(item.path);
+        const { Icon } = item;
 
-      <TouchableOpacity
-        className="items-center justify-center w-12 h-12"
-        activeOpacity={0.5}
-      >
-        <PackagePlus size={24} color="#9ca3af" />
-      </TouchableOpacity>
-
-      <TouchableOpacity className="items-center justify-center w-12 h-12" onPress={() => router.push("/(admin)/profile")}>
-        <User size={24} color="#9ca3af" />
-      </TouchableOpacity>
+        return (
+          <TouchableOpacity key={item.id} activeOpacity={0.7} onPress={() => router.push(`/(admin)${item.path}` as any)} className={`items-center justify-center w-20 h-12 rounded-full ${isActive ? "bg-white shadow-md" : ""}`}>
+            <Icon size={item.size} color={isActive ? ACTIVE_COLOR : INACTIVE_COLOR} />
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 };
 
-export default NavigationBar;
+export default memo(NavigationBar);
