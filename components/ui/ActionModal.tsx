@@ -2,7 +2,6 @@ import React from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 interface ActionModalProps {
-  visible: boolean;
   onClose: () => void;
   onSubmit: () => void;
   title: string;
@@ -11,9 +10,9 @@ interface ActionModalProps {
   submitLabel?: string;
 }
 
-const ActionModal: React.FC<ActionModalProps> = ({ visible, onClose, onSubmit, title, children, loading = false, submitLabel = "Simpan" }) => {
+const ActionModal: React.FC<ActionModalProps> = ({  onClose, onSubmit, title, children, loading = false, submitLabel = "Simpan" }) => {
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+    <Modal visible={true} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
         <Pressable className="justify-end flex-1 bg-black/50" onPress={loading ? undefined : onClose}>
           <Pressable className="bg-white rounded-t-[32px] max-h-[90%] w-full">
