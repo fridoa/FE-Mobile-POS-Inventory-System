@@ -164,13 +164,15 @@ const CategoryPage = () => {
           )}
         </View>
 
-        <ActionModal visible={modalVisible} onClose={handleRequestClose} onSubmit={handleSubmit(onPreSubmit)} title={editingCategory ? "Edit Kategori" : "Kategori Baru"} loading={isPending}>
-          <Controller
-            control={control}
-            name="name"
-            render={({ field: { onChange, onBlur, value } }) => <FormInput label="Nama Kategori" placeholder="Contoh: Makanan, Minuman" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.name?.message} />}
-          />
-        </ActionModal>
+        {modalVisible && (
+          <ActionModal onClose={handleRequestClose} onSubmit={handleSubmit(onPreSubmit)} title={editingCategory ? "Edit Kategori" : "Kategori Baru"} loading={isPending}>
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { onChange, onBlur, value } }) => <FormInput label="Nama Kategori" placeholder="Contoh: Makanan, Minuman" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.name?.message} />}
+            />
+          </ActionModal>
+        )}
 
         <CustomAlert {...alertConfig} />
 

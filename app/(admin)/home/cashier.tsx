@@ -72,22 +72,20 @@ const CashierPage = () => {
     },
   });
 
-const filteredData = useMemo(() => {
-  const list = Array.isArray(data) ? data : [];
-  
-  const filtered = list.filter((item: IUser) => {
-    const isCashier = item.role === "kasir";
-    if (!debouncedSearch) return isCashier;
-    
-    const searchMatch = 
-      item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
-      item.username.toLowerCase().includes(debouncedSearch.toLowerCase());
-    
-    return isCashier && searchMatch;
-  });
+  const filteredData = useMemo(() => {
+    const list = Array.isArray(data) ? data : [];
 
-  return filtered.sort((a, b) => a.name.localeCompare(b.name));
-}, [data, debouncedSearch]);
+    const filtered = list.filter((item: IUser) => {
+      const isCashier = item.role === "kasir";
+      if (!debouncedSearch) return isCashier;
+
+      const searchMatch = item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || item.username.toLowerCase().includes(debouncedSearch.toLowerCase());
+
+      return isCashier && searchMatch;
+    });
+
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
+  }, [data, debouncedSearch]);
 
   const handleRequestClose = () => {
     if (formState.isDirty) {
@@ -163,27 +161,29 @@ const filteredData = useMemo(() => {
           )}
         </View>
 
-        <ActionModal visible={modalVisible} onClose={handleRequestClose} onSubmit={handleSubmit(onPreSubmit)} title={editingUser ? "Edit Data Kasir" : "Buat Kasir Baru"} loading={isPending}>
-          <Controller
-            control={control}
-            name="name"
-            render={({ field: { onChange, onBlur, value } }) => <FormInput label="Nama Lengkap" placeholder="Masukkan nama kasir" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.name?.message} />}
-          />
+        {modalVisible && (
+          <ActionModal onClose={handleRequestClose} onSubmit={handleSubmit(onPreSubmit)} title={editingUser ? "Edit Data Kasir" : "Buat Kasir Baru"} loading={isPending}>
+            <Controller
+              control={control}
+              name="name"
+              render={({ field: { onChange, onBlur, value } }) => <FormInput label="Nama Lengkap" placeholder="Masukkan nama kasir" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.name?.message} />}
+            />
 
-          <Controller
-            control={control}
-            name="username"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <FormInput label="Username" placeholder="Masukkan username login" autoCapitalize="none" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.username?.message} />
-            )}
-          />
+            <Controller
+              control={control}
+              name="username"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <FormInput label="Username" placeholder="Masukkan username login" autoCapitalize="none" onBlur={onBlur} onChangeText={onChange} value={value} error={errors.username?.message} />
+              )}
+            />
 
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value } }) => <FormInput label="Password" placeholder="Min. 6 karakter" secureTextEntry onBlur={onBlur} onChangeText={onChange} value={value} error={errors.password?.message} />}
-          />
-        </ActionModal>
+            <Controller
+              control={control}
+              name="password"
+              render={({ field: { onChange, onBlur, value } }) => <FormInput label="Password" placeholder="Min. 6 karakter" secureTextEntry onBlur={onBlur} onChangeText={onChange} value={value} error={errors.password?.message} />}
+            />
+          </ActionModal>
+        )}
 
         <CustomAlert isVisible={alertConfig.isVisible} type={alertConfig.type} title={alertConfig.title} message={alertConfig.message} confirmText="Lanjutkan" onConfirm={alertConfig.onConfirm} onCancel={alertConfig.onCancel} />
 

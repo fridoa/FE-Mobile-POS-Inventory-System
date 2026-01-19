@@ -5,20 +5,18 @@ export default function AdminLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: "slide_from_right",
+        animation: "fade",
+        animationMatchesGesture: true,
         gestureEnabled: true,
+        contentStyle: { backgroundColor: "#F9FAFB" },
       }}
     >
-      <Stack.Screen name="home/index" />
-
       <Stack.Screen
-        name="home/cashier"
+        name="(tabs)"
         options={{
-          animation: "slide_from_right",
-          presentation: "card",
+          animation: "fade",
         }}
       />
-
     </Stack>
   );
 }
