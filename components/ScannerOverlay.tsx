@@ -8,10 +8,8 @@ export default function ScannerOverlay() {
   const cornerScale = useSharedValue(1);
 
   useEffect(() => {
-    // Animasi Laser
     scanPos.value = withRepeat(withTiming(1, { duration: 2500 }), -1, true);
 
-    // Animasi Denyut pada sudut kotak
     cornerScale.value = withRepeat(withSequence(withTiming(1.1, { duration: 1000 }), withTiming(1, { duration: 1000 })), -1, true);
   }, []);
 
