@@ -4,12 +4,24 @@ import endpoint from "./endpoint.constant";
 
 type ProductPayload = Omit<IProduct, "_id" | "createdAt" | "updatedAt">;
 
-const productService = {
-  getProduct: async (query?: string): Promise<IProduct[]> => {
-    const params = query ? { search: query, limit: 50 } : {};
+export interface IProductQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  stockStatus?: string; 
+  sku?: string;
+}
 
+const productService = {
+  getProduct: async (params?: IProductQuery): Promise<IProduct[]> => {
     try {
-      const response = await instance.get(endpoint.PRODUCT, { params });
+      const response = await instance.get(endpoint.PRODUCT, {
+        params: {
+          limit: 50,
+          ...params,
+        },
+      });
 
       return response.data.data || [];
     } catch (error) {

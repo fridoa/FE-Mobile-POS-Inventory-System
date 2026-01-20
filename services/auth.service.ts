@@ -13,6 +13,11 @@ const authService = {
     return response.data;
   },
 
+  updateFCMToken: async (fcmToken: string): Promise<ISuccessResponse> => {
+    const response = await instance.patch<ISuccessResponse>(`${endpoint.AUTH}/update-fcm-token`, { fcmToken });
+    return response.data;
+  },
+
   getProfile: async (): Promise<IProfileResponse> => {
     const response = await instance.get<IProfileResponse>(`${endpoint.AUTH}/profile`);
     return response.data;
