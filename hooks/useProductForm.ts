@@ -12,6 +12,7 @@ import productService from "@/services/product.service";
 import { IProduct } from "@/types/Product";
 import Toast from "react-native-toast-message";
 
+// 1. Skema Validasi (Sudah mencakup field baru)
 const productSchema = yup.object().shape({
   name: yup.string().required("Nama produk wajib diisi"),
   category: yup.string().required("Kategori wajib dipilih"),
@@ -20,6 +21,8 @@ const productSchema = yup.object().shape({
   sku: yup.string().required("SKU wajib diisi"),
   stock: yup.number().typeError("Stok harus angka").required("Stok wajib diisi").min(0),
   minStock: yup.number().typeError("Min. stok harus angka").required("Batas stok menipis wajib diisi").default(5),
+  expiryDate: yup.date().optional().nullable().default(null),
+  discount: yup.number().typeError("Diskon harus angka").optional().min(0).default(0),
 });
 
 type ProductFormData = yup.InferType<typeof productSchema>;
@@ -33,6 +36,7 @@ export const useProductForm = (initialData?: IProduct) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(initialData?.imageUrl || null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // 2. Inisialisasi Form dengan Default Values lengkap
   const {
     control,
     handleSubmit,
@@ -48,11 +52,14 @@ export const useProductForm = (initialData?: IProduct) => {
       sku: initialData?.sku || "",
       stock: initialData?.stock || 0,
       minStock: initialData?.minStock || 5,
+      // Default value untuk field baru
+      expiryDate: initialData?.expiryDate ? new Date(initialData.expiryDate) : null,
+      discount: initialData?.discount || 0,
     },
   });
 
   const mutation = useMutation({
-    mutationFn: (payload: Omit<IProduct, "_id" | "createdAt" | "updatedAt">) => {
+    mutationFn: (payload: any) => {
       if (isEdit && initialData?._id) {
         return productService.updateProduct(initialData._id, payload);
       }
@@ -113,20 +120,6 @@ export const useProductForm = (initialData?: IProduct) => {
         finalImageData.imageUrl = uploadResult.url;
         finalImageData.imageFileId = uploadResult.fileId;
       } catch (error: any) {
-        console.error("--- ERROR UPLOAD GAMBAR ---");
-        if (error.response) {
-          // Server merespon dengan status code di luar range 2xx
-          console.error("Data Error Server:", error.response.data);
-          console.error("Status Server:", error.response.status);
-          console.error("Headers Server:", error.response.headers);
-        } else if (error.request) {
-          // Request dibuat tapi tidak ada respon (masalah jaringan)
-          console.error("Tidak ada respon dari server (Network Error). Request:", error.request);
-        } else {
-          // Terjadi kesalahan saat setting up request
-          console.error("Pesan Error:", error.message);
-        }
-
         Toast.show({
           type: "error",
           text1: "Gagal Upload",
@@ -138,6 +131,7 @@ export const useProductForm = (initialData?: IProduct) => {
       setIsUploading(false);
     }
 
+    // 3. Transformasi Payload sebelum dikirim ke Backend
     const payload = {
       ...data,
       ...finalImageData,
@@ -145,6 +139,9 @@ export const useProductForm = (initialData?: IProduct) => {
       costPrice: Number(data.costPrice),
       stock: Number(data.stock),
       minStock: Number(data.minStock),
+      discount: Number(data.discount || 0),
+      // Pastikan expiryDate dikirim sebagai string ISO atau null
+      expiryDate: data.expiryDate ? data.expiryDate.toISOString() : null,
     };
 
     mutation.mutate(payload);
