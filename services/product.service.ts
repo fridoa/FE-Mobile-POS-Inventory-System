@@ -9,7 +9,7 @@ export interface IProductQuery {
   limit?: number;
   search?: string;
   category?: string;
-  stockStatus?: string; 
+  stockStatus?: string;
   sku?: string;
 }
 
@@ -34,7 +34,10 @@ const productService = {
     try {
       const response = await instance.get(`${endpoint.PRODUCT}/sku/${sku}`);
       return response.data.data;
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        return null;
+      }
       console.error("Error fetching product by SKU:", error);
       return null;
     }
