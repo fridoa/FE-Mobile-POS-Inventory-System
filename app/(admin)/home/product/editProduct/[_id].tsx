@@ -9,7 +9,7 @@ export default function EditProductScreen() {
   const { _id } = useLocalSearchParams<{ _id: string }>();
 
   const { data: product, isLoading } = useQuery({
-    queryKey: ["product", _id],
+    queryKey: ["products", _id],
     queryFn: () => productService.getProductById(_id!),
     enabled: !!_id,
   });

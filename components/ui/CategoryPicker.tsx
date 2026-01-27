@@ -1,9 +1,10 @@
 import { useDebounce } from "@/hooks/useDebounce";
 import categoryService from "@/services/category.service";
+import { FlashList } from "@shopify/flash-list";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, Tag, X } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
-import { ActivityIndicator, FlatList, Modal, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Modal, Text, TouchableOpacity, View } from "react-native";
 import SearchBar from "./SearchBar";
 
 interface CategoryPickerProps {
@@ -62,7 +63,7 @@ const CategoryPicker = ({ value, onChange, error }: CategoryPickerProps) => {
             {isLoading ? (
               <ActivityIndicator className="py-20" color="#059669" />
             ) : (
-              <FlatList
+              <FlashList
                 data={filteredCategories}
                 keyExtractor={(item) => item._id}
                 contentContainerStyle={{ padding: 16 }}

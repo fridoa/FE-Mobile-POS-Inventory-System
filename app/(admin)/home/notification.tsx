@@ -1,11 +1,12 @@
 import ScreenWrapper from "@/components/ScreenWrapper";
 import PageHeader from "@/components/ui/PageHeader";
 import notificationService from "@/services/notification.service";
+import { FlashList } from "@shopify/flash-list";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { AlertTriangle, CheckCircle2, Clock, Info } from "lucide-react-native";
-import React from "react";
-import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
+import React, { useCallback } from "react";
+import { ActivityIndicator, RefreshControl, Text, TouchableOpacity, View } from "react-native";
 
 export default function NotificationScreen() {
   const queryClient = useQueryClient();
@@ -14,6 +15,10 @@ export default function NotificationScreen() {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["notifications", "list"],
     queryFn: () => notificationService.findAll(1, 50),
+    staleTime: 1000 * 30,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
+    placeholderData: (previousData) => previousData,
+    refetchOnMount: "always",
   });
 
   const markAllReadMutation = useMutation({
@@ -23,9 +28,17 @@ export default function NotificationScreen() {
     },
   });
 
+  const markReadMutation = useMutation({
+    mutationFn: (id: string) => notificationService.markAsRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["sales-summary"] });
+    },
+  });
+
   const notifications = data?.data || [];
 
-  const getStyle = (type: string) => {
+  const getStyle = useCallback((type: string) => {
     switch (type) {
       case "WARNING":
         return { bg: "bg-amber-50", iconBg: "bg-amber-100", color: "#d97706", icon: AlertTriangle };
@@ -34,7 +47,51 @@ export default function NotificationScreen() {
       default:
         return { bg: "bg-emerald-50", iconBg: "bg-emerald-100", color: "#059669", icon: Info };
     }
-  };
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: any }) => {
+      const style = getStyle(item.type);
+      const Icon = style.icon;
+
+      return (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          className={`flex-row p-4 mb-3 rounded-3xl border border-gray-100 ${item.isRead ? "bg-white" : style.bg}`}
+          onPress={() => {
+            if (!item.isRead) markReadMutation.mutate(item._id);
+
+            if (item.data?.type === "RESTOCK_SCREEN") {
+              router.push("/(admin)/home/restock");
+            }
+          }}
+        >
+          <View className={`p-3 rounded-2xl ${style.iconBg} self-start`}>
+            <Icon size={20} color={style.color} />
+          </View>
+
+          <View className="flex-1 ml-4">
+            <View className="flex-row items-start justify-between">
+              <Text className={`font-bold text-sm flex-1 ${item.isRead ? "text-gray-500" : "text-gray-800"}`}>{item.title}</Text>
+              {!item.isRead && <View className="w-2 h-2 mt-1 ml-2 bg-red-500 rounded-full" />}
+            </View>
+            <Text className="mt-1 text-xs leading-4 text-gray-500">{item.message}</Text>
+            <Text className="text-[10px] text-gray-400 mt-2 font-medium">
+              {new Date(item.createdAt).toLocaleString("id-ID", {
+                day: "numeric",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [getStyle, queryClient, router],
+  );
+
+  const keyExtractor = useCallback((item: any) => item._id, []);
 
   return (
     <ScreenWrapper>
@@ -55,50 +112,12 @@ export default function NotificationScreen() {
             <ActivityIndicator size="large" color="#059669" />
           </View>
         ) : (
-          <FlatList
+          <FlashList
             data={notifications}
-            keyExtractor={(item) => item._id}
+            keyExtractor={keyExtractor}
             contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
             refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#059669" />}
-            renderItem={({ item }) => {
-              const style = getStyle(item.type);
-              const Icon = style.icon;
-
-              return (
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  className={`flex-row p-4 mb-3 rounded-3xl border border-gray-100 ${item.isRead ? "bg-white" : style.bg}`}
-                  onPress={async () => {
-                    if (!item.isRead) await notificationService.markAsRead(item._id);
-                    queryClient.invalidateQueries({ queryKey: ["notifications"] });
-
-                    if (item.data?.type === "RESTOCK_SCREEN") {
-                      router.push("/(admin)/home/restock");
-                    }
-                  }}
-                >
-                  <View className={`p-3 rounded-2xl ${style.iconBg} self-start`}>
-                    <Icon size={20} color={style.color} />
-                  </View>
-
-                  <View className="flex-1 ml-4">
-                    <View className="flex-row items-start justify-between">
-                      <Text className={`font-bold text-sm flex-1 ${item.isRead ? "text-gray-500" : "text-gray-800"}`}>{item.title}</Text>
-                      {!item.isRead && <View className="w-2 h-2 mt-1 ml-2 bg-red-500 rounded-full" />}
-                    </View>
-                    <Text className="mt-1 text-xs leading-4 text-gray-500">{item.message}</Text>
-                    <Text className="text-[10px] text-gray-400 mt-2 font-medium">
-                      {new Date(item.createdAt).toLocaleString("id-ID", {
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            }}
+            renderItem={renderItem}
             ListEmptyComponent={
               <View className="items-center px-10 mt-32">
                 <View className="p-6 mb-4 rounded-full bg-gray-50">

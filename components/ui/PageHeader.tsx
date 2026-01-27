@@ -24,10 +24,10 @@ const PageHeader = ({ title, showBackButton = true, onBack, rightElement }: Page
   };
 
   return (
-    <View className="flex-row items-center justify-between px-6 py-4 bg-white border-b border-gray-50">
+    <View className="flex-row items-center justify-between px-2 py-4 bg-white border-b border-gray-50">
       <View className="flex-row items-center flex-1">
         {showBackButton && (
-          <TouchableOpacity onPress={handleBack} className="p-1 mr-4">
+          <TouchableOpacity onPress={handleBack} className="p-1 mr-2">
             <ChevronLeft size={24} color="#1f2937" />
           </TouchableOpacity>
         )}

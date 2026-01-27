@@ -12,17 +12,16 @@ import productService from "@/services/product.service";
 import { IProduct } from "@/types/Product";
 import Toast from "react-native-toast-message";
 
-// 1. Skema Validasi (Sudah mencakup field baru)
 const productSchema = yup.object().shape({
   name: yup.string().required("Nama produk wajib diisi"),
   category: yup.string().required("Kategori wajib dipilih"),
-  price: yup.number().typeError("Harga harus berupa angka").required("Harga wajib diisi").min(0),
+  basePrice: yup.number().typeError("Harga jual harus angka").required("Wajib diisi").min(yup.ref("costPrice"), "Harga jual tidak boleh di bawah harga modal"),
   costPrice: yup.number().typeError("Harga modal harus angka").optional().default(0),
   sku: yup.string().required("SKU wajib diisi"),
   stock: yup.number().typeError("Stok harus angka").required("Stok wajib diisi").min(0),
   minStock: yup.number().typeError("Min. stok harus angka").required("Batas stok menipis wajib diisi").default(5),
   expiryDate: yup.date().optional().nullable().default(null),
-  discount: yup.number().typeError("Diskon harus angka").optional().min(0).default(0),
+  discount: yup.number().typeError("Diskon harus angka").min(0, "Minimal 0%").max(100, "Maksimal 100%").default(0),
 });
 
 type ProductFormData = yup.InferType<typeof productSchema>;
@@ -36,7 +35,6 @@ export const useProductForm = (initialData?: IProduct) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(initialData?.imageUrl || null);
   const [isUploading, setIsUploading] = useState(false);
 
-  // 2. Inisialisasi Form dengan Default Values lengkap
   const {
     control,
     handleSubmit,
@@ -47,12 +45,11 @@ export const useProductForm = (initialData?: IProduct) => {
     defaultValues: {
       name: initialData?.name || "",
       category: typeof initialData?.category === "object" ? initialData.category._id : initialData?.category || "",
-      price: initialData?.price || 0,
+      basePrice: initialData?.basePrice || 0,
       costPrice: initialData?.costPrice || 0,
       sku: initialData?.sku || "",
       stock: initialData?.stock || 0,
       minStock: initialData?.minStock || 5,
-      // Default value untuk field baru
       expiryDate: initialData?.expiryDate ? new Date(initialData.expiryDate) : null,
       discount: initialData?.discount || 0,
     },
@@ -66,7 +63,7 @@ export const useProductForm = (initialData?: IProduct) => {
       return productService.createProduct(payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["product"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       Toast.show({
         type: "success",
         text1: "Berhasil",
@@ -131,16 +128,18 @@ export const useProductForm = (initialData?: IProduct) => {
       setIsUploading(false);
     }
 
-    // 3. Transformasi Payload sebelum dikirim ke Backend
+    const discountAmount = (Number(data.basePrice) * Number(data.discount || 0)) / 100;
+    const calculatedPrice = Number(data.basePrice) - discountAmount;
+
     const payload = {
       ...data,
       ...finalImageData,
-      price: Number(data.price),
+      basePrice: Number(data.basePrice),
+      price: calculatedPrice,
       costPrice: Number(data.costPrice),
       stock: Number(data.stock),
       minStock: Number(data.minStock),
       discount: Number(data.discount || 0),
-      // Pastikan expiryDate dikirim sebagai string ISO atau null
       expiryDate: data.expiryDate ? data.expiryDate.toISOString() : null,
     };
 

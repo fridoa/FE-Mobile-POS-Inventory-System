@@ -1,5 +1,4 @@
 import { Stack } from "expo-router";
-import React from "react";
 
 export default function CashierLayout() {
   return (
@@ -7,8 +6,17 @@ export default function CashierLayout() {
       screenOptions={{
         headerShown: false,
         animation: "fade",
-        contentStyle: { backgroundColor: "white" },
+        animationMatchesGesture: true,
+        gestureEnabled: true,
+        contentStyle: { backgroundColor: "#F9FAFB" },
       }}
-    />
+    >
+      <Stack.Screen
+        name="(tabs)"
+        options={{
+          animation: "fade",
+        }}
+      />
+    </Stack>
   );
 }

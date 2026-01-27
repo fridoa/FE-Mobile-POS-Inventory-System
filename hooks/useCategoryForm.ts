@@ -25,8 +25,10 @@ export const useCategoryForm = (isEdit: boolean, onSuccessCallback?: () => void)
     defaultValues: { name: "" },
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["categories"] });
-
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["categories"] });
+    queryClient.invalidateQueries({ queryKey: ["products"] });
+  };
   const createMutationCategory = useMutation({
     mutationFn: (data: CategoryFormValues) => categoryService.createCategory(data),
     onSuccess: () => {
@@ -35,7 +37,7 @@ export const useCategoryForm = (isEdit: boolean, onSuccessCallback?: () => void)
       onSuccessCallback?.();
     },
     onError: (err: any) => {
-      console.error("Create Error:", err.response?.data); // Log detail error backend
+      console.error("Create Error:", err.response?.data);
       Toast.show({
         type: "error",
         text1: "Gagal",

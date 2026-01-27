@@ -17,8 +17,6 @@ export interface IApiError {
 
 export type TRole = "admin" | "kasir";
 
-
-
 export interface ITokens {
   accessToken: string;
   refreshToken: string;
@@ -42,6 +40,16 @@ export interface IChangePasswordRequest {
 
 export interface IUpdateFcmTokenRequest {
   fcmToken: string;
+}
+
+export interface IForgotPasswordRequest {
+  email: string;
+}
+
+export interface IResetPasswordRequest {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export type ILoginResponse = IApiResponse<ITokens>;

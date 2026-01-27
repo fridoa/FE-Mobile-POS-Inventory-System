@@ -1,14 +1,19 @@
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { PackageSearch, Plus } from "lucide-react-native";
+import React, { useCallback, useState } from "react";
+import { ActivityIndicator, RefreshControl, Text, TouchableOpacity, View } from "react-native";
+
 import ScreenWrapper from "@/components/ScreenWrapper";
 import PageHeader from "@/components/ui/PageHeader";
 import ProductCard from "@/components/ui/ProductCard";
 import SearchBar from "@/components/ui/SearchBar";
 import { useDebounce } from "@/hooks/useDebounce";
 import productService from "@/services/product.service";
-import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
-import { PackageSearch, Plus } from "lucide-react-native";
-import { useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, View } from "react-native";
+import { IProduct } from "@/types/Product";
+import { FlashList } from "@shopify/flash-list";
+
+const LIST_CONTENT_STYLE = { paddingBottom: 100, paddingTop: 10 };
 
 export default function ProductScreen() {
   const router = useRouter();
@@ -22,15 +27,34 @@ export default function ProductScreen() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["product", debouncedSearch],
-    queryFn: () => productService.getProduct(debouncedSearch),
+    queryKey: ["products", "list", { search: debouncedSearch }],
+    queryFn: () => productService.getProduct({ search: debouncedSearch }),
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
   });
 
+  const handleEditProduct = useCallback((id: string) => {
+    router.push({
+      pathname: "/(admin)/home/product/editProduct/[_id]",
+      params: { _id: id },
+    });
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: any) => (
+      <TouchableOpacity activeOpacity={0.7} onPress={() => handleEditProduct(item._id)}>
+        <ProductCard item={item} />
+      </TouchableOpacity>
+    ),
+    [handleEditProduct],
+  );
+
+  const keyExtractor = useCallback((item: IProduct) => String(item._id), []);
   return (
     <ScreenWrapper>
       <View className="flex-1 bg-white">
         <PageHeader title="Inventaris Produk" />
-
         <SearchBar placeholder="Cari nama produk atau SKU..." value={searchQuery} onChangeText={setSearchQuery} />
 
         <View className="flex-1 px-4 mt-2">
@@ -46,16 +70,12 @@ export default function ProductScreen() {
               </TouchableOpacity>
             </View>
           ) : products && products.length > 0 ? (
-            <FlatList
+            <FlashList
               data={products}
-              keyExtractor={(item) => item._id || Math.random().toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity activeOpacity={0.7} onPress={() => router.push({ pathname: "/(admin)/home/product/editProduct/[_id]", params: { _id: item._id as string } })}>
-                  <ProductCard item={item} />
-                </TouchableOpacity>
-              )}
+              keyExtractor={keyExtractor}
+              renderItem={renderItem}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 100, paddingTop: 10 }}
+              contentContainerStyle={LIST_CONTENT_STYLE}
               refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} colors={["#059669"]} />}
             />
           ) : (
@@ -69,8 +89,9 @@ export default function ProductScreen() {
           )}
         </View>
 
+        {/* Floating Add Button */}
         <View className="absolute bottom-10 right-6">
-          <TouchableOpacity onPress={() => router.push("/(admin)/home/product/addProduct")} className="flex-row items-center px-6 py-4 shadow-lg bg-emerald-600 rounded-2xl shadow-emerald-200" activeOpacity={0.9}>
+          <TouchableOpacity onPress={() => router.push("/(admin)/home/product/addProduct")} className="flex-row items-center px-6 py-4 shadow-lg bg-emerald-600 rounded-2xl" activeOpacity={0.9}>
             <Plus size={24} color="#FFFFFF" strokeWidth={3} />
             <Text className="ml-2 text-base font-bold text-white">Tambah</Text>
           </TouchableOpacity>

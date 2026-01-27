@@ -1,104 +1,133 @@
-import NavigationBar from "@/components/NavigationBar";
-import StatBadge from "@/components/StatBadge";
+import StatCard from "@/components/StatCard"; // Menggunakan komponen yang sama dengan Admin
+import reportService from "@/services/report.service";
+import transactionService from "@/services/transaction.service";
 import { useAuthStore } from "@/stores/auth.store";
+import formatRupiah from "@/utils/formatRupiah";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { Banknote, ChevronRight, History, LogOut, PackageSearch, Receipt, ShoppingCart, Ticket } from "lucide-react-native";
+import { Banknote, ChevronRight, Clock, History, LogOut, PackageSearch, ShoppingCart } from "lucide-react-native";
 import React from "react";
-import { ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { RefreshControl, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CashierHomePage = () => {
   const { user, logoutAction } = useAuthStore();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
-  const handleLogout = () => {
-    logoutAction();
-  };
+  // 1. Fetch Summary Hari Ini (Personal Kasir)
+  const {
+    data: summaryRes,
+    isRefetching,
+    refetch,
+  } = useQuery({
+    queryKey: ["sales-summary", "cashier-daily"],
+    queryFn: () => reportService.getSalesSummary({ cashierId: user?._id }),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // 2. Fetch 5 Transaksi Terbaru
+  const { data: recentTransactionsRes } = useQuery({
+    queryKey: ["transactions", "recent-home"],
+    queryFn: () => transactionService.getAll({ limit: 5 }), // Sesuaikan service kamu
+  });
+
+  const stats = summaryRes?.data;
+  const recentTransactions = recentTransactionsRes?.data || [];
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <StatusBar barStyle="light-content" backgroundColor="#059669" />
+    <View className="flex-1 bg-slate-50">
+      <StatusBar barStyle="dark-content" />
 
-      <View className="bg-[#059669] h-[35vh] w-full absolute top-0 rounded-b-[40px] z-0">
-        <View className="absolute top-0 right-0 w-40 h-40 -mr-10 rounded-full bg-white/5" />
-        <View className="absolute w-24 h-24 rounded-full top-20 -left-5 bg-white/5" />
+      {/* HEADER: Sama dengan Admin Style */}
+      <View style={{ paddingTop: insets.top + 10 }} className="flex-row items-center justify-between px-6 pb-2 bg-slate-50">
+        <View className="flex-row items-center">
+          <View className="items-center justify-center w-12 h-12 border-2 border-white rounded-full shadow-sm bg-emerald-100">
+            <Text className="text-lg font-black text-emerald-700">{user?.username?.substring(0, 1).toUpperCase() || "K"}</Text>
+          </View>
+          <View className="ml-3">
+            <Text className="text-[10px] font-black tracking-[1px] text-emerald-600/60 uppercase">Shift Aktif</Text>
+            <Text className="text-xl font-black leading-6 text-slate-800">{user?.username || "Kasir"}</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity onPress={() => logoutAction()} className="p-2.5 bg-white rounded-full border border-slate-100 shadow-sm">
+          <LogOut size={20} color="#64748B" />
+        </TouchableOpacity>
       </View>
 
-      <SafeAreaView className="flex-1" edges={["top", "left", "right"]}>
-        <View className="flex-row items-start justify-between px-6 pt-2 pb-6">
-          <View>
-            <Text className="mb-1 text-sm font-medium text-emerald-100">Shift Pagi</Text>
-            <Text className="text-2xl font-bold text-white capitalize">{user?.username || "Kasir"}</Text>
-            <View className="flex-row items-center mt-2">
-              <View className="w-2 h-2 bg-green-300 rounded-full animate-pulse" />
-              <Text className="ml-2 text-xs text-emerald-100">Toko Buka • Online</Text>
+      <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#059669" />} contentContainerStyle={{ paddingBottom: 100 }}>
+        <View className="px-6 pt-6">
+          {/* STATS: Tanpa Grafik, Hanya Angka Utama */}
+          <StatCard isPrimary title="Omzet Saya Hari Ini" value={formatRupiah(stats?.totalRevenue || 0)} icon={<Banknote size={24} color="white" />} trend={`${stats?.totalTransactions || 0} Transaksi`} />
+
+          {/* HERO BUTTON: Create Order */}
+          <TouchableOpacity activeOpacity={0.9} onPress={() => router.push("/(cashier)/home/pos/pos")} className="flex-row items-center justify-between p-6 mb-8 shadow-xl bg-emerald-600 rounded-3xl shadow-emerald-100">
+            <View className="flex-row items-center flex-1">
+              <View className="items-center justify-center w-12 h-12 bg-white/20 rounded-2xl">
+                <ShoppingCart size={24} color="white" />
+              </View>
+              <View className="ml-4">
+                <Text className="text-lg font-black text-white">Buat Pesanan</Text>
+                <Text className="text-xs text-emerald-100">Klik untuk mulai melayani pelanggan</Text>
+              </View>
             </View>
-          </View>
-
-          <TouchableOpacity onPress={handleLogout} className="p-2 border bg-white/10 rounded-xl border-white/10">
-            <LogOut size={20} color="white" />
+            <ChevronRight size={20} color="white" />
           </TouchableOpacity>
-        </View>
 
-        <View className="mb-4">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-5" contentContainerStyle={{ paddingRight: 20 }}>
-            <StatBadge label="Total Omzet" value="Rp 1.250.000" icon={Banknote} />
-            <StatBadge label="Transaksi" value="24 Order" icon={Ticket} />
-          </ScrollView>
-        </View>
-
-        <View className="flex-1 mx-4 overflow-hidden bg-white shadow-sm rounded-t-3xl">
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
-            <TouchableOpacity activeOpacity={0.9} className="w-full bg-[#059669] h-32 rounded-3xl p-5 flex-row items-center justify-between shadow-lg shadow-emerald-200 mb-6 relative overflow-hidden">
-              <View className="z-10 flex-1 pr-2">
-                <View className="items-center justify-center w-12 h-12 mb-3 rounded-full bg-white/20">
-                  <ShoppingCart size={24} color="white" fill="white" />
-                </View>
-                <Text className="text-xl font-bold text-white" numberOfLines={1} adjustsFontSizeToFit>
-                  Buat Pesanan
-                </Text>
-                <Text className="mt-1 text-xs text-emerald-100">Layani pelanggan sekarang</Text>
+          {/* QUICK MENU */}
+          <Text className="mb-4 ml-1 text-[11px] font-black tracking-[2px] text-slate-400 uppercase">Akses Cepat</Text>
+          <View className="flex-row justify-between mb-8">
+            <TouchableOpacity onPress={() => router.push("/(cashier)/(tabs)/inventory")} className="w-[48%] bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex-row items-center">
+              <View className="items-center justify-center w-10 h-10 mr-3 bg-orange-50 rounded-2xl">
+                <PackageSearch size={20} color="#f97316" />
               </View>
-
-              <View className="z-10 p-2 rounded-full bg-white/20">
-                <ChevronRight size={24} color="white" />
-              </View>
+              <Text className="font-bold text-slate-700">Cek Stok</Text>
             </TouchableOpacity>
 
-            <Text className="mb-4 ml-1 text-xs font-bold tracking-widest text-gray-400 uppercase">Menu Lainnya</Text>
+            <TouchableOpacity onPress={() => router.push("/(cashier)/(tabs)/history")} className="w-[48%] bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex-row items-center">
+              <View className="items-center justify-center w-10 h-10 mr-3 bg-blue-50 rounded-2xl">
+                <History size={20} color="#3b82f6" />
+              </View>
+              <Text className="font-bold text-slate-700">Riwayat</Text>
+            </TouchableOpacity>
+          </View>
 
-            <View className="flex-row flex-wrap justify-between gap-y-4">
-              <TouchableOpacity className="w-[48%] bg-gray-50 p-4 rounded-2xl border border-gray-100" onPress={() => router.push("/(cashier)/history")}>
-                <View className="items-center justify-center w-10 h-10 mb-3 bg-blue-100 rounded-full">
-                  <History size={20} color="#3b82f6" />
+          {/* RECENT TRANSACTIONS: List Style */}
+          <View className="flex-row items-center justify-between px-1 mb-4">
+            <Text className="text-[11px] font-black tracking-[2px] text-slate-400 uppercase">Transaksi Terbaru</Text>
+            <TouchableOpacity onPress={() => router.push("/(cashier)/(tabs)/history")}>
+              <Text className="text-[11px] font-black text-emerald-600 uppercase">Lihat Semua</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+            {recentTransactions.length > 0 ? (
+              recentTransactions.map((item: any, index: number) => (
+                <View key={item._id} className={`flex-row items-center justify-between p-4 ${index !== recentTransactions.length - 1 ? "border-b border-slate-50" : ""}`}>
+                  <View className="flex-row items-center flex-1">
+                    <View className="items-center justify-center w-10 h-10 mr-3 rounded-full bg-slate-50">
+                      <Clock size={18} color="#94a3b8" />
+                    </View>
+                    <View>
+                      <Text className="text-[13px] font-bold text-slate-800 uppercase">#{item.invoiceNumber?.slice(-6)}</Text>
+                      <Text className="text-[10px] text-slate-400 font-medium">{item.paymentMethod || "Tunai"}</Text>
+                    </View>
+                  </View>
+                  <View className="items-end">
+                    <Text className="text-[14px] font-black text-slate-800">{formatRupiah(item.totalAmount)}</Text>
+                    <Text className="text-[9px] font-bold text-emerald-500 uppercase">Berhasil</Text>
+                  </View>
                 </View>
-                <Text className="mb-1 font-bold text-gray-800">Riwayat</Text>
-                <Text className="text-xs text-gray-400">Cek transaksi hari ini</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity className="w-[48%] bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <View className="items-center justify-center w-10 h-10 mb-3 bg-orange-100 rounded-full">
-                  <PackageSearch size={20} color="#f97316" />
-                </View>
-                <Text className="mb-1 font-bold text-gray-800">Cek Stok</Text>
-                <Text className="text-xs text-gray-400">Cari barang cepat</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity className="w-[48%] bg-gray-50 p-4 rounded-2xl border border-gray-100">
-                <View className="items-center justify-center w-10 h-10 mb-3 bg-purple-100 rounded-full">
-                  <Receipt size={20} color="#a855f7" />
-                </View>
-                <Text className="mb-1 font-bold text-gray-800">Laporan</Text>
-                <Text className="text-xs text-gray-400">Rekap akhir shift</Text>
-              </TouchableOpacity>
-
-              <View className="w-[48%]" />
-            </View>
-          </ScrollView>
+              ))
+            ) : (
+              <View className="items-center py-10">
+                <Text className="text-xs italic font-bold text-slate-400">Belum ada transaksi hari ini</Text>
+              </View>
+            )}
+          </View>
         </View>
-
-        <NavigationBar />
-      </SafeAreaView>
+      </ScrollView>
     </View>
   );
 };

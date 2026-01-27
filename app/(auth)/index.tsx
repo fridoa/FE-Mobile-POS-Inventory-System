@@ -1,4 +1,5 @@
 import { useLogin } from "@/hooks/useLogin";
+import { useRouter } from "expo-router";
 import { Eye, EyeOff, Lock, User } from "lucide-react-native";
 import React from "react";
 import { Controller } from "react-hook-form";
@@ -6,6 +7,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, Te
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Login() {
+  const router = useRouter();
   const { control, handleSubmit, handleLogin, isPending, errors, isVisible, toggleVisibility } = useLogin();
 
   return (
@@ -55,12 +57,10 @@ export default function Login() {
                 </View>
 
                 <View className="flex-row items-center justify-end mt-1">
-                  <TouchableOpacity>
+                  <TouchableOpacity onPress={() => router.push("/(auth)/forgotPassword")}>
                     <Text className="text-sm font-semibold text-emerald-600">Forgot Password?</Text>
                   </TouchableOpacity>
                 </View>
-
-                
 
                 <TouchableOpacity
                   onPress={handleSubmit(handleLogin)}
@@ -69,8 +69,6 @@ export default function Login() {
                 >
                   {isPending ? <ActivityIndicator color="white" /> : <Text className="text-lg font-bold text-white">Masuk</Text>}
                 </TouchableOpacity>
-
-                
               </View>
             </View>
           </ScrollView>
