@@ -1,7 +1,7 @@
 import { FlashList } from "@shopify/flash-list";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Layers } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Controller } from "react-hook-form";
 import { ActivityIndicator, RefreshControl, StatusBar, Text, View } from "react-native";
 
@@ -46,7 +46,10 @@ const CategoryPage = () => {
       const response = await categoryService.getCategory();
       return response.data?.data || [];
     },
-    staleTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
+    placeholderData: keepPreviousData,
+    refetchOnMount: "always",
   });
 
   const filteredData = useMemo(() => {
@@ -68,29 +71,35 @@ const CategoryPage = () => {
     return sorted.filter((cat: ICategory) => cat.name.toLowerCase().includes(debouncedSearch.toLowerCase()));
   }, [data, debouncedSearch]);
 
-  const handleEdit = (category: ICategory) => {
-    setEditingCategory(category);
-    setModalVisible(true);
-    reset({ name: category.name });
-  };
+  const handleEdit = useCallback(
+    (category: ICategory) => {
+      setEditingCategory(category);
+      setModalVisible(true);
+      reset({ name: category.name });
+    },
+    [reset],
+  );
 
-  const handleDelete = (id: string, closeSwipe: () => void) => {
-    setAlertConfig((prev) => ({
-      ...prev,
-      isVisible: true,
-      type: "danger",
-      title: "Hapus Kategori",
-      message: "Data kategori ini akan dihapus permanen. Lanjutkan?",
-      onConfirm: () => {
-        deleteCategory(id);
-        setAlertConfig((p) => ({ ...p, isVisible: false }));
-      },
-      onCancel: () => {
-        setAlertConfig((p) => ({ ...p, isVisible: false }));
-        closeSwipe();
-      },
-    }));
-  };
+  const handleDelete = useCallback(
+    (id: string, closeSwipe: () => void) => {
+      setAlertConfig((prev) => ({
+        ...prev,
+        isVisible: true,
+        type: "danger",
+        title: "Hapus Kategori",
+        message: "Data kategori ini akan dihapus permanen. Lanjutkan?",
+        onConfirm: () => {
+          deleteCategory(id);
+          setAlertConfig((p) => ({ ...p, isVisible: false }));
+        },
+        onCancel: () => {
+          setAlertConfig((p) => ({ ...p, isVisible: false }));
+          closeSwipe();
+        },
+      }));
+    },
+    [deleteCategory],
+  );
 
   const handleRequestClose = () => {
     if (formState.isDirty) {
@@ -125,7 +134,6 @@ const CategoryPage = () => {
         setAlertConfig((p) => ({ ...p, isVisible: false }));
         if (isEdit && editingCategory?._id) {
           const payload = { ...formData };
-          if (!payload.password) delete payload.password;
           updateCategory({ id: editingCategory._id, data: payload });
         } else {
           createCategory(formData);
@@ -134,6 +142,9 @@ const CategoryPage = () => {
     }));
   };
 
+  const renderItem = useCallback(({ item }: { item: ICategory }) => <CategoryCard item={item} onEdit={handleEdit} onDelete={handleDelete} />, [handleEdit, handleDelete]);
+
+  const keyExtractor = useCallback((item: ICategory, index: number) => item._id ?? index.toString(), []);
   return (
     <ScreenWrapper>
       <View className="flex-1 bg-gray-50">
@@ -149,8 +160,8 @@ const CategoryPage = () => {
           ) : (
             <FlashList
               data={filteredData}
-              renderItem={({ item }) => <CategoryCard item={item} onEdit={handleEdit} onDelete={handleDelete} />}
-              keyExtractor={(item) => item._id}
+              renderItem={renderItem}
+              keyExtractor={keyExtractor}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 100 }}
               refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} colors={["#3b82f6"]} />}
