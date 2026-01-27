@@ -1,7 +1,8 @@
 export interface IProduct {
   _id?: string;
   name: string;
-  price: number;
+  basePrice: number;
+  price?: number;
   costPrice: number;
   stock: number;
   minStock: number;

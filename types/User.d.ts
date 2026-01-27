@@ -1,9 +1,10 @@
-import { TRole } from "./Auth"; 
+import { TRole } from "./Auth";
 
 export interface IUser {
   _id?: string;
   name: string;
   username: string;
+  email?: string;
   role: TRole;
   isActive: boolean;
   createdAt?: string;
