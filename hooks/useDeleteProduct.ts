@@ -10,14 +10,14 @@ export const useDeleteProduct = () => {
   const mutation = useMutation({
     mutationFn: (id: string) => productService.deleteProduct(id),
     onSuccess: () => {
-      // Invalidate cache agar list produk terupdate otomatis
-      queryClient.invalidateQueries({ queryKey: ["product"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["sales-summary"] });
       Toast.show({
         type: "success",
         text1: "Dihapus",
         text2: "Produk telah dihapus dari inventaris",
       });
-      // Jika menghapus dari halaman detail/edit, balik ke halaman sebelumnya
+
       if (router.canGoBack()) {
         router.back();
       }
