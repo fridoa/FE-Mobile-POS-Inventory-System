@@ -182,6 +182,11 @@ const InventoryScreen = () => {
               </View>
 
               {/* BOTTOM ACTIONS (Optional) */}
+              <View className="flex-row gap-3 mt-6">
+                <TouchableOpacity className="flex-1 bg-emerald-600 p-5 rounded-[24px] items-center shadow-lg shadow-emerald-200">
+                  <Text className="text-xs font-black tracking-widest text-white uppercase">Update Stok</Text>
+                </TouchableOpacity>
+              </View>
 
               <View className="h-20" />
             </ScrollView>
