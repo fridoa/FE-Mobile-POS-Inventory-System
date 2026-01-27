@@ -99,18 +99,19 @@ const ProductFormUI = ({ initialData }: ProductFormUIProps) => {
           <Controller control={control} name="category" render={({ field: { onChange, value } }) => <CategoryPicker value={value} onChange={onChange} error={errors.category?.message as string} />} />
 
           <Text className="mt-4 mb-2 text-xs font-semibold text-gray-500">Harga Jual *</Text>
-          <View className="flex-row items-center p-1 border border-gray-100 rounded-xl bg-gray-50">
+          <View className={`flex-row items-center p-1 border rounded-xl bg-gray-50 ${errors.basePrice ? "border-red-500" : "border-gray-100"}`}>
             <View className="px-3 py-2 bg-gray-200 rounded-lg">
               <Text className="font-bold text-gray-600">Rp</Text>
             </View>
             <Controller
               control={control}
-              name="price"
+              name="basePrice"
               render={({ field: { onChange, value } }) => (
                 <TextInput className="flex-1 p-2 font-bold text-gray-800" keyboardType="numeric" onChangeText={(text) => onChange(text === "" ? 0 : Number(text))} value={value?.toString()} placeholder="0" />
               )}
             />
           </View>
+          {!!errors.basePrice && <Text className="mt-1 text-xs text-red-500">{errors.basePrice.message as string}</Text>}
         </View>
 
         {/* Detail & Barcode */}
