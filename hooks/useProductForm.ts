@@ -12,16 +12,17 @@ import productService from "@/services/product.service";
 import { IProduct } from "@/types/Product";
 import Toast from "react-native-toast-message";
 
+// 1. Schema harus sinkron dengan Backend (basePrice, costPrice, discount)
 const productSchema = yup.object().shape({
   name: yup.string().required("Nama produk wajib diisi"),
   category: yup.string().required("Kategori wajib dipilih"),
-  basePrice: yup.number().typeError("Harga jual harus angka").required("Wajib diisi").min(yup.ref("costPrice"), "Harga jual tidak boleh di bawah harga modal"),
-  costPrice: yup.number().typeError("Harga modal harus angka").optional().default(0),
-  sku: yup.string().required("SKU wajib diisi"),
+  basePrice: yup.number().typeError("Harga jual harus angka").required("Wajib diisi").min(0),
+  costPrice: yup.number().typeError("Harga modal harus angka").required("Wajib diisi").min(0),
+  sku: yup.string().optional().nullable().default(""),
   stock: yup.number().typeError("Stok harus angka").required("Stok wajib diisi").min(0),
   minStock: yup.number().typeError("Min. stok harus angka").required("Batas stok menipis wajib diisi").default(5),
   expiryDate: yup.date().optional().nullable().default(null),
-  discount: yup.number().typeError("Diskon harus angka").min(0, "Minimal 0%").max(100, "Maksimal 100%").default(0),
+  discount: yup.number().typeError("Diskon harus angka").min(0).max(100).default(0),
 });
 
 type ProductFormData = yup.InferType<typeof productSchema>;
@@ -50,7 +51,7 @@ export const useProductForm = (initialData?: IProduct) => {
       sku: initialData?.sku || "",
       stock: initialData?.stock || 0,
       minStock: initialData?.minStock || 5,
-      expiryDate: initialData?.expiryDate ? new Date(initialData.expiryDate) : null,
+      expiryDate: initialData?.expiryDate ? new Date(initialData.expiryDate as any) : null,
       discount: initialData?.discount || 0,
     },
   });
@@ -64,43 +65,34 @@ export const useProductForm = (initialData?: IProduct) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["products"] });
-      Toast.show({
-        type: "success",
-        text1: "Berhasil",
-        text2: `Produk berhasil ${isEdit ? "diperbarui" : "ditambahkan"}`,
-      });
+      Toast.show({ type: "success", text1: "Berhasil", text2: `Produk diperbarui` });
       router.back();
     },
     onError: (error: any) => {
-      const serverMessage = error?.response?.data?.meta?.message;
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: serverMessage || "Terjadi kesalahan pada server",
-      });
+      console.log("FULL ERROR SERVER:", error.response?.data);
+      const serverMessage = error?.response?.data?.message || "Terjadi kesalahan server";
+      Toast.show({ type: "error", text1: "Error", text2: serverMessage });
     },
   });
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
     });
-
     if (!result.canceled) {
       const manipResult = await ImageManipulator.manipulateAsync(result.assets[0].uri, [{ resize: { width: 600 } }], {
         compress: 0.6,
         format: ImageManipulator.SaveFormat.JPEG,
       });
-
       setSelectedImage(manipResult.uri);
     }
   };
 
   const handleScan = (sku: string) => {
-    setValue("sku", sku);
+    setValue("sku", sku, { shouldDirty: true, shouldValidate: true });
     setShowScanner(false);
   };
 
@@ -116,31 +108,22 @@ export const useProductForm = (initialData?: IProduct) => {
         const uploadResult = await mediaService.uploadImage(selectedImage);
         finalImageData.imageUrl = uploadResult.url;
         finalImageData.imageFileId = uploadResult.fileId;
-      } catch (error: any) {
-        Toast.show({
-          type: "error",
-          text1: "Gagal Upload",
-          text2: error?.response?.data?.message || "Gambar tidak dapat dikirim ke server",
-        });
+      } catch (error) {
         setIsUploading(false);
         return;
       }
       setIsUploading(false);
     }
 
-    const discountAmount = (Number(data.basePrice) * Number(data.discount || 0)) / 100;
-    const calculatedPrice = Number(data.basePrice) - discountAmount;
-
     const payload = {
       ...data,
       ...finalImageData,
       basePrice: Number(data.basePrice),
-      price: calculatedPrice,
       costPrice: Number(data.costPrice),
       stock: Number(data.stock),
       minStock: Number(data.minStock),
-      discount: Number(data.discount || 0),
-      expiryDate: data.expiryDate ? data.expiryDate.toISOString() : null,
+      discount: Number(data.discount),
+      expiryDate: data.expiryDate instanceof Date ? data.expiryDate.toISOString() : null,
     };
 
     mutation.mutate(payload);
@@ -157,7 +140,6 @@ export const useProductForm = (initialData?: IProduct) => {
     setShowScanner,
     handleScan,
     isEdit,
-    mutate: mutation.mutate,
     isDirty,
   };
 };
