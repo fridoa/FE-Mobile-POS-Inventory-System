@@ -4,12 +4,26 @@ import { asyncStoragePersister } from "@/lib/persister";
 import { useAuthStore } from "@/stores/auth.store";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { SplashScreen, Stack, useRootNavigationState } from "expo-router";
+import * as Notifications from "expo-notifications";
+import { Href, SplashScreen, Stack, useRootNavigationState, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ReanimatedLogLevel, configureReanimatedLogger } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 import "../global.css";
+
+import { registerForPushNotificationsAsync } from "@/lib/notification";
+import authService from "@/services/auth.service";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,7 +32,7 @@ const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 60 * 24 * 7,
       refetchOnWindowFocus: false,
       refetchOnReconnect: true,
-      refetchOnMount: true,
+      refetchOnMount: false,
       retry: 1,
     },
   },
@@ -30,44 +44,61 @@ function InitialLayout() {
   const { user, isLoading, initializeAction } = useAuthStore();
   const navigationState = useRootNavigationState();
   const [isReady, setIsReady] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    console.log("[Layout] 1. initializeAction dipanggil");
     initializeAction();
+
+    configureReanimatedLogger({
+      level: ReanimatedLogLevel.warn,
+      strict: false,
+    });
   }, []);
 
   useEffect(() => {
-    const navigationReady = !!navigationState?.key;
-    console.log("[Layout] 2. Monitoring Status:", { navigationReady, isLoading });
+    if (isReady && user) {
+      registerForPushNotificationsAsync().then((token) => {
+        if (token) {
+          authService.updateFCMToken(token);
+        }
+      });
 
-    if (navigationReady && !isLoading) {
-      console.log("[Layout] 3. Sistem Siap, isReady set True");
-      setIsReady(true);
-      SplashScreen.hideAsync();
+      const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
+        const data = response.notification.request.content.data;
+        if (data?.productId) {
+          router.push({
+            pathname: "/(admin)/home/product/editProduct/[_id]",
+            params: { _id: data.productId },
+          } as Href);
+        }
+      });
+
+      return () => responseSubscription.remove();
     }
-  }, [isLoading, navigationState?.key]);
+  }, [isReady, user]);
 
   useProtectedRoute();
 
   useEffect(() => {
-    if (isReady && user) {
-      console.log("[Layout] 4. User terdeteksi, inisialisasi fitur tambahan...");
+    const navigationReady = !!navigationState?.key;
+
+    if (navigationReady && !isLoading) {
+      const timer = setTimeout(() => {
+        setIsReady(true);
+        SplashScreen.hideAsync();
+      }, 50);
+      return () => clearTimeout(timer);
     }
-  }, [isReady, user]);
+  }, [isLoading, navigationState?.key]);
 
-  console.log("[Layout] 5. Rendering Stack Tree...");
-
-  configureReanimatedLogger({
-    level: ReanimatedLogLevel.warn,
-    strict: false,
-  });
+  if (!isReady) return null;
 
   return (
     <GestureHandlerRootView className="flex-1">
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-        <Stack.Screen name="(cashier)" options={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false, animation: "fade_from_bottom" }}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(admin)" />
+        <Stack.Screen name="(cashier)" />
       </Stack>
     </GestureHandlerRootView>
   );
@@ -80,7 +111,6 @@ export default function RootLayout() {
       persistOptions={{
         persister: asyncStoragePersister,
         maxAge: 1000 * 60 * 60 * 24 * 7,
-        hydrateOptions: {},
       }}
     >
       <InitialLayout />
