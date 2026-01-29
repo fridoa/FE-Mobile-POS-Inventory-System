@@ -7,14 +7,12 @@ import { ActivityIndicator, Alert, Modal, ScrollView, Text, TextInput, Touchable
 
 import ScreenWrapper from "@/components/ScreenWrapper";
 import transactionService, { ICreateTransactionPayload } from "@/services/transaction.service";
-import { useAuthStore } from "@/stores/auth.store";
 import { CartItem, useCartStore } from "@/stores/cart.store";
 import formatRupiah from "@/utils/formatRupiah";
 
 export default function PaymentScreen() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const { user } = useAuthStore();
   const { cart, getTotalPrice, clearCart } = useCartStore();
   const totalPrice = getTotalPrice();
   const animation = useRef<LottieView>(null);
@@ -49,48 +47,43 @@ export default function PaymentScreen() {
       payAmount: receivedAmount,
     };
 
-    const transactionDetails = {
-      transaction_date: new Date().toISOString(),
-      cashier_name: user?.name || user?.username || "Kasir Toko Intan",
-      total_price: totalPrice,
-      money_receive: receivedAmount,
-      money_return: returnAmount,
-      items: cart.map((item: CartItem) => {
-        const sellingPrice = Number(item.price) || 0;
-        const basePrice = Number(item.basePrice) || sellingPrice;
-
-        return {
-          name: item.name,
-          quantity: item.qty,
-          basePrice: basePrice,
-          price: sellingPrice,
-          discountAmount: basePrice - sellingPrice,
-          subtotal: sellingPrice * item.qty,
-        };
-      }),
-    };
-
     try {
-      await transactionService.create(payload);
-      queryClient.invalidateQueries({ queryKey: ["sales-summary"] });
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+      const response = await transactionService.create(payload);
+      const serverTransaction = response.data;
+
+      await Promise.all([queryClient.invalidateQueries({ queryKey: ["sales-summary"] }), queryClient.invalidateQueries({ queryKey: ["transactions"] }), queryClient.invalidateQueries({ queryKey: ["products"] })]);
+
       setShowSuccessAnim(true);
+      animation.current?.play();
+
+      const successData = {
+        invoiceNumber: serverTransaction?.invoiceNumber,
+        totalPrice: totalPrice,
+        receivedAmount: receivedAmount,
+        returnAmount: returnAmount,
+        items: cart.map((item) => ({
+          name: item.name,
+          qty: item.qty,
+          subtotal: (item.price ?? 0) * item.qty,
+        })),
+      };
 
       setTimeout(() => {
         setShowSuccessAnim(false);
         clearCart();
+
         router.replace({
           pathname: "/(cashier)/home/pos/success",
-          params: { data: JSON.stringify(transactionDetails) },
-        });
+          params: { data: JSON.stringify(successData) },
+        } as any);
       }, 2000);
-    } catch (error) {
-      Alert.alert("Gagal", "Terjadi kesalahan saat menyimpan transaksi.");
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.meta?.message || "Terjadi kesalahan server";
+      Alert.alert("Transaksi Gagal", errorMsg);
     } finally {
       setIsSubmitting(false);
     }
-  }, [isValid, cart, receivedAmount, totalPrice, returnAmount, user, clearCart, router]);
+  }, [isValid, cart, receivedAmount, totalPrice, returnAmount, queryClient, clearCart, router]);
 
   return (
     <ScreenWrapper bg="#F9FAFB">
