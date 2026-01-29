@@ -4,10 +4,10 @@ import { ChevronRight, Filter, ShoppingBag } from "lucide-react-native";
 import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import HistoryFilterModal from "@/components/HistoryFilterModal";
 import HistoryItem from "@/components/HistoryItem";
 import TransactionDetailModal from "@/components/TransactionDetailModal";
+import HistoryItemSkeleton from "@/components/ui/skeleton/HistoryItemSkeleton";
 import transactionService, { ITransactionHistoryItem } from "@/services/transaction.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { FilterType, useHistoryStore } from "@/stores/history.store";
@@ -94,7 +94,6 @@ export default function HistoryScreen() {
     <View style={{ flex: 1, backgroundColor: "#F8FAFC", paddingTop: insets.top }}>
       <StatusBar barStyle="dark-content" />
 
-      {/* HEADER */}
       <View className="px-6 py-4 bg-white border-b border-slate-100">
         <Text className="mb-4 text-2xl font-black text-slate-800">Riwayat</Text>
         <TouchableOpacity onPress={() => setFilterModalVisible(true)} className="flex-row items-center justify-between p-4 bg-white border-2 shadow-sm border-emerald-50 rounded-2xl">
@@ -111,37 +110,42 @@ export default function HistoryScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* LIST TRANSAKSI */}
       <View className="flex-1">
-        <FlashList<ITransactionHistoryItem>
-          data={flatData}
-          keyExtractor={keyExtractor}
-          renderItem={renderItem}
-          onRefresh={refetch}
-          refreshing={isRefetching}
-          onEndReached={() => {
-            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-          }}
-          onEndReachedThreshold={0.5}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40 }}
-          ListEmptyComponent={
-            !isLoading ? (
-              <View className="items-center justify-center mt-20 opacity-40">
-                <ShoppingBag size={80} color="#94A3B8" />
-                <Text className="mt-4 text-lg font-bold text-slate-500">Belum Ada Data</Text>
-                <Text className="px-10 text-sm text-center text-slate-400">{`Tidak ada transaksi pada "${filters.displayLabel}"`}</Text>
-              </View>
-            ) : (
-              <ActivityIndicator color="#059669" className="mt-20" />
-            )
-          }
-        />
+        {isLoading && flatData.length === 0 ? (
+          <View className="px-5 pt-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <HistoryItemSkeleton key={i} />
+            ))}
+          </View>
+        ) : (
+          <FlashList<ITransactionHistoryItem>
+            data={flatData}
+            keyExtractor={keyExtractor}
+            renderItem={renderItem}
+            onRefresh={refetch}
+            refreshing={isRefetching}
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+            }}
+            onEndReachedThreshold={0.5}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40 }}
+            ListEmptyComponent={
+              !isLoading ? (
+                <View className="items-center justify-center mt-20 opacity-40">
+                  <ShoppingBag size={80} color="#94A3B8" />
+                  <Text className="mt-4 text-lg font-bold text-slate-500">Belum Ada Data</Text>
+                  <Text className="px-10 text-sm text-center text-slate-400">{`Tidak ada transaksi pada "${filters.displayLabel}"`}</Text>
+                </View>
+              ) : (
+                <ActivityIndicator color="#059669" className="mt-20" />
+              )
+            }
+          />
+        )}
       </View>
 
-      {/* MODAL FILTER (Logika internal ada di dalam komponen) */}
       <HistoryFilterModal visible={filterModalVisible} onClose={() => setFilterModalVisible(false)} currentType={filters.type} onApply={handleApplyFilter} />
 
-      {/* MODAL DETAIL */}
       <TransactionDetailModal visible={detailModalVisible} onClose={() => setDetailModalVisible(false)} transaction={selectedTrx} />
     </View>
   );

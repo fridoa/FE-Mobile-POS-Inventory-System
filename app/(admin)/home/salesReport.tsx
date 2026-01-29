@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, ChevronRight, Trophy } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import FinancialSummary from "@/components/FinancialSummary";
 import RevenueChart from "@/components/RevenueChart";
@@ -9,6 +9,9 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import PageHeader from "@/components/ui/PageHeader";
 
 import HistoryFilterModal from "@/components/HistoryFilterModal";
+import { FinancialSummarySkeleton } from "@/components/ui/skeleton/Report/FinancialSummarySkeleton";
+import { RevenueChartSkeleton } from "@/components/ui/skeleton/Report/RevenueChartSkeleton";
+import Skeleton from "@/components/ui/skeleton/Skeleton";
 import { FilterType, formatLocal, useDateFilter } from "@/hooks/useDateFilter";
 import reportService from "@/services/report.service";
 import { router } from "expo-router";
@@ -103,9 +106,19 @@ export default function SalesReportScreen() {
 
         <ScrollView refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#10b981" />} contentContainerStyle={{ paddingBottom: 30 }}>
           {isLoading ? (
-            <View className="items-center py-20">
-              <ActivityIndicator size="large" color="#10b981" />
-              <Text className="mt-4 text-xs font-bold text-slate-400">Menyusun laporan...</Text>
+            <View>
+              <FinancialSummarySkeleton />
+              <RevenueChartSkeleton />
+
+              <View className="mx-5 p-5 bg-white border border-slate-100 rounded-[32px]">
+                <View className="flex-row items-center">
+                  <Skeleton width={48} height={48} borderRadius={16} className="mr-4" />
+                  <View>
+                    <Skeleton width={120} height={14} className="mb-2" />
+                    <Skeleton width={180} height={10} />
+                  </View>
+                </View>
+              </View>
             </View>
           ) : (
             <>
@@ -115,19 +128,16 @@ export default function SalesReportScreen() {
             </>
           )}
 
-          <TouchableOpacity onPress={() => router.push("/(admin)/home/rankingScreen")} className="mx-5 p-5 bg-white border border-emerald-100 rounded-[32px] flex-row items-center justify-between shadow-sm shadow-emerald-100">
+          <TouchableOpacity onPress={() => router.push("/(admin)/home/rankingScreen")} className="flex-row items-center justify-between h-20 px-5 mx-5 bg-white border border-l-4 shadow-sm border-l-emerald-500 border-slate-100 rounded-2xl">
             <View className="flex-row items-center">
-              <View className="p-3 mr-4 bg-emerald-50 rounded-2xl">
-                <Trophy size={24} color="#059669" />
-              </View>
-              <View>
-                <Text className="text-base font-black text-slate-800">Performa Barang</Text>
-                <Text className="text-[11px] text-slate-400 font-medium">Cek produk & kategori terlaris</Text>
+              <Trophy size={20} color="#059669" />
+              <View className="ml-4">
+                <Text className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Overview</Text>
+                <Text className="text-base font-bold text-slate-800">Cek Produk Terlaris</Text>
               </View>
             </View>
-            <View className="p-2 rounded-full bg-slate-50">
-              <ChevronRight size={18} color="#94A3B8" />
-            </View>
+
+            <ChevronRight size={20} color="#CBD5E1" />
           </TouchableOpacity>
         </ScrollView>
 

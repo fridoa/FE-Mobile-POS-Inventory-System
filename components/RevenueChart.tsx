@@ -1,4 +1,5 @@
 import { IDailyStat } from "@/services/report.service";
+import { getReportLabel } from "@/utils/label";
 import { Zap } from "lucide-react-native";
 import React, { memo, useMemo } from "react";
 import { Dimensions, Text, TextStyle, View } from "react-native";
@@ -15,38 +16,11 @@ const RevenueChart = memo(({ data, filterType }: RevenueChartProps) => {
   const isDataEmpty = !data || data.length === 0;
   const isLongTerm = filterType === "year" || filterType === "all";
 
-  const getLabel = (id: string) => {
-    if (!id || id === "-") return "-";
-    const date = new Date(id);
-
-    if (filterType === "7days") {
-      const days = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
-      return days[date.getDay()];
-    }
-
-    if (filterType === "year") {
-      const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
-      const parts = id.split("-");
-      const monthIndex = parts.length > 1 ? Number(parts[1]) - 1 : date.getMonth();
-      return months[monthIndex] || id;
-    }
-
-    if (filterType === "all") {
-      const parts = id.split("-");
-      if (parts.length >= 2) {
-        const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
-        return `${months[Number(parts[1]) - 1]} '${parts[0].slice(2)}`;
-      }
-    }
-
-    return id.split("-")[2] || id;
-  };
-
   const smartInsight = useMemo(() => {
     if (isDataEmpty) return "Belum ada data transaksi untuk dianalisis.";
 
     const peakItem = [...data].sort((a, b) => b.revenue - a.revenue)[0];
-    const peakLabel = getLabel(peakItem._id);
+    const peakLabel = getReportLabel(peakItem._id, filterType);
     const peakValue = peakItem.revenue.toLocaleString("id-ID");
 
     if (filterType === "all" || filterType === "year") {
@@ -68,7 +42,7 @@ const RevenueChart = memo(({ data, filterType }: RevenueChartProps) => {
 
       return {
         value: item.revenue,
-        label: getLabel(item._id),
+        label: getReportLabel(item._id, filterType),
         frontColor: isPeak ? "#34d399" : "#10b981",
         spacing: data.length > 10 ? 12 : 25,
         labelTextStyle: {
@@ -86,14 +60,21 @@ const RevenueChart = memo(({ data, filterType }: RevenueChartProps) => {
     return peak > 0 ? peak : 10000;
   }, [chartData, isDataEmpty]);
 
+  const formatShortRupiah = (val: number) => {
+    if (val >= 1000000) return `${(val / 1000000).toFixed(1)}jt`;
+    if (val >= 1000) return `${(val / 1000).toFixed(0)}k`;
+    return val.toString();
+  };
+
   return (
     <View style={{ backgroundColor: "rgba(255,255,255,0.65)" }} className="mx-5 mb-6 p-6 border border-white/80 rounded-[35px] shadow-sm shadow-slate-200">
-      {/* HEADER */}
+      {/* HEADER SECTION */}
       <View className="mb-6">
         <Text className="text-base font-black text-slate-800">Tren Pendapatan</Text>
         <Text className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{isLongTerm ? "Analisis Jangka Panjang" : "Fluktuasi Harian"}</Text>
       </View>
 
+      {/* CHART SECTION */}
       <View className="items-center justify-center">
         {isDataEmpty && (
           <View className="absolute z-10 items-center justify-center">
@@ -101,7 +82,6 @@ const RevenueChart = memo(({ data, filterType }: RevenueChartProps) => {
           </View>
         )}
 
-        {/* GRAFIK DENGAN KEY RESET */}
         <BarChart
           key={`chart-${filterType}-${data.length}`}
           data={chartData}
@@ -114,7 +94,7 @@ const RevenueChart = memo(({ data, filterType }: RevenueChartProps) => {
           yAxisThickness={0}
           xAxisThickness={0}
           yAxisLabelPrefix="Rp "
-          yAxisLabelContainerStyle={{ width: 50 }}
+          formatYLabel={(label) => formatShortRupiah(Number(label))}
           yAxisTextStyle={{ color: "#94A3B8", fontSize: 8 }}
           rulesType="dashed"
           rulesColor="rgba(148,163,184,0.12)"
@@ -130,7 +110,7 @@ const RevenueChart = memo(({ data, filterType }: RevenueChartProps) => {
         />
       </View>
 
-      {/* DYNAMIC SMART INSIGHT BOX */}
+      {/* SMART INSIGHT BOX */}
       {!isDataEmpty && (
         <View className="flex-row items-start p-4 mt-6 border bg-amber-50/50 border-amber-100 rounded-2xl">
           <View className="p-2 mr-3 bg-amber-100 rounded-xl">

@@ -1,12 +1,13 @@
 import { RestockCard } from "@/components/restockCard";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import PageHeader from "@/components/ui/PageHeader";
+import RestockCardSkeleton from "@/components/ui/skeleton/RestockCardSkeleton";
 import { useRestock } from "@/hooks/useResctock";
 import { IProduct } from "@/types/Product";
 import { FlashList } from "@shopify/flash-list";
 import { MessageCircle, PackageOpen } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, RefreshControl, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { RefreshControl, StatusBar, Text, TouchableOpacity, View } from "react-native";
 
 export default function RestockScreen() {
   const { products, isLoading, updateStock, isUpdating, refresh, shareToWhatsApp } = useRestock();
@@ -33,8 +34,10 @@ export default function RestockScreen() {
         <PageHeader title="Manajemen Restock" />
 
         {isLoading ? (
-          <View className="items-center justify-center flex-1">
-            <ActivityIndicator size="large" color="#059669" />
+          <View className="flex-1 px-4 mt-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <RestockCardSkeleton key={i} />
+            ))}
           </View>
         ) : (
           <View className="flex-1">

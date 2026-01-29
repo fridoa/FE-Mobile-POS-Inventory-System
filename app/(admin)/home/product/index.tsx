@@ -2,12 +2,13 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { PackageSearch, Plus } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, RefreshControl, Text, TouchableOpacity, View } from "react-native";
+import { RefreshControl, Text, TouchableOpacity, View } from "react-native";
 
 import ScreenWrapper from "@/components/ScreenWrapper";
 import PageHeader from "@/components/ui/PageHeader";
 import ProductCard from "@/components/ui/ProductCard";
 import SearchBar from "@/components/ui/SearchBar";
+import ProductCardSkeleton from "@/components/ui/skeleton/ProductCardSkeleton";
 import { useDebounce } from "@/hooks/useDebounce";
 import productService from "@/services/product.service";
 import { IProduct } from "@/types/Product";
@@ -59,8 +60,10 @@ export default function ProductScreen() {
 
         <View className="flex-1 px-4 mt-2">
           {isLoading && !isRefetching ? (
-            <View className="items-center justify-center flex-1">
-              <ActivityIndicator size="large" color="#059669" />
+            <View className="flex-1">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
             </View>
           ) : isError ? (
             <View className="items-center justify-center flex-1 p-6">
