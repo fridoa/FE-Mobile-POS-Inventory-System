@@ -1,10 +1,9 @@
 import authService from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { ILoginRequest } from "@/types/Auth";
-import { IUser } from "@/types/User";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { getMessaging, getToken } from "@react-native-firebase/messaging";
 import { useMutation } from "@tanstack/react-query";
-import { jwtDecode } from "jwt-decode";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Toast from "react-native-toast-message";
@@ -33,24 +32,22 @@ export const useLogin = () => {
 
   const mutation = useMutation({
     mutationFn: async (payload: ILoginRequest) => {
-      const loginResponse = await authService.login(payload);
+      let fcmToken: string | undefined = undefined;
 
-      const { accessToken, refreshToken } = loginResponse.data;
+      try {
+        const messaging = getMessaging();
+        const token = await getToken(messaging);
+        fcmToken = token || undefined;
+      } catch (e) {
+        console.log("Gagal mengambil FCM Token:", e);
+      }
 
-      const decodedToken: any = jwtDecode(accessToken);
+      const loginResponse = await authService.login({
+        ...payload,
+        fcmToken,
+      });
 
-      const minimalUser: Partial<IUser> = {
-        _id: decodedToken._id,
-        role: decodedToken.role,
-
-        username: decodedToken.username || payload.username,
-      };
-
-      return {
-        user: minimalUser as IUser,
-        accessToken,
-        refreshToken,
-      };
+      return loginResponse.data;
     },
 
     onSuccess: async (data) => {
@@ -59,7 +56,7 @@ export const useLogin = () => {
       Toast.show({
         type: "success",
         text1: "Login Berhasil",
-        text2: `Selamat datang kembali!`,
+        text2: `Selamat datang kembali, ${data.user.name || data.user.username}!`,
       });
 
       reset();
@@ -68,9 +65,7 @@ export const useLogin = () => {
     onError: (error: any) => {
       const errorMessage = error?.response?.data?.meta?.message || error?.response?.data?.message || "Terjadi kesalahan pada sistem server";
 
-      setError("root", {
-        message: errorMessage,
-      });
+      setError("root", { message: errorMessage });
 
       Toast.show({
         type: "error",
