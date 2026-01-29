@@ -3,7 +3,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Layers } from "lucide-react-native";
 import React, { useCallback, useMemo, useState } from "react";
 import { Controller } from "react-hook-form";
-import { ActivityIndicator, RefreshControl, StatusBar, Text, View } from "react-native";
+import { RefreshControl, StatusBar, Text, View } from "react-native";
 
 import CategoryCard from "@/components/CategoryCard";
 import CustomAlert, { CustomAlertProps } from "@/components/CustomAlert";
@@ -13,6 +13,7 @@ import FloatingAddButton from "@/components/ui/FloatingAddButton";
 import FormInput from "@/components/ui/FormInput";
 import PageHeader from "@/components/ui/PageHeader";
 import SearchBar from "@/components/ui/SearchBar";
+import CategoryCardSkeleton from "@/components/ui/skeleton/CategoryCardSkeleton";
 import { useCategoryForm } from "@/hooks/useCategoryForm";
 import { useDebounce } from "@/hooks/useDebounce";
 import categoryService from "@/services/category.service";
@@ -154,8 +155,10 @@ const CategoryPage = () => {
 
         <View className="flex-1 px-6">
           {isLoading ? (
-            <View className="items-center justify-center flex-1">
-              <ActivityIndicator size="large" color="#3b82f6" />
+            <View className="flex-1">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <CategoryCardSkeleton key={i} />
+              ))}
             </View>
           ) : (
             <FlashList
