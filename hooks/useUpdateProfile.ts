@@ -2,6 +2,7 @@ import authService from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as Yup from "yup";
 
@@ -15,7 +16,7 @@ export const useUpdateProfileHook = (onSuccess: () => void, onError: (msg: strin
   const queryClient = useQueryClient();
   const { user, setUser } = useAuthStore();
 
-  const form = useForm({
+  const { control, handleSubmit, reset, ...formState } = useForm({
     resolver: yupResolver(updateProfileSchema),
     defaultValues: {
       name: user?.name || "",
@@ -24,13 +25,21 @@ export const useUpdateProfileHook = (onSuccess: () => void, onError: (msg: strin
     },
   });
 
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name || "",
+        username: user.username || "",
+        email: user.email || "",
+      });
+    }
+  }, [user, reset]);
+
   const mutation = useMutation({
     mutationFn: (payload: any) => authService.updateProfile(payload),
     onSuccess: (res) => {
       if (setUser) setUser(res.data);
-
       queryClient.invalidateQueries({ queryKey: ["profile"] });
-
       onSuccess();
     },
     onError: (err: any) => {
@@ -38,7 +47,7 @@ export const useUpdateProfileHook = (onSuccess: () => void, onError: (msg: strin
     },
   });
 
-  const onSubmit = form.handleSubmit((data) => mutation.mutate(data));
+  const onSubmit = handleSubmit((data) => mutation.mutate(data));
 
-  return { ...form, onSubmit, isLoading: mutation.isPending };
+  return { control, onSubmit, ...formState, isLoading: mutation.isPending };
 };
