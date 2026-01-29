@@ -54,7 +54,6 @@ export default function AdminProfileScreen() {
               <ChevronRight size={20} color="#D1D5DB" />
             </TouchableOpacity>
 
-            {/* Pengaturan Printer */}
             <TouchableOpacity className="flex-row items-center justify-between py-4 border-b border-gray-50">
               <View className="flex-row items-center">
                 <View className="p-2 mr-4 rounded-lg bg-emerald-50">
@@ -65,7 +64,6 @@ export default function AdminProfileScreen() {
               <ChevronRight size={20} color="#D1D5DB" />
             </TouchableOpacity>
 
-            {/* Logout (Style Terintegrasi List - image_31ea3c.png) */}
             <TouchableOpacity onPress={() => logoutAction()} className="flex-row items-center justify-between py-4">
               <View className="flex-row items-center">
                 <View className="p-2 mr-4 rounded-lg bg-red-50">
