@@ -1,74 +1,57 @@
 import { useAuthStore } from "@/stores/auth.store";
 import { useRootNavigationState, useRouter, useSegments } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
+/**
+ * Hook untuk memproteksi rute berdasarkan status autentikasi dan role user.
+ * Dioptimalkan untuk meminimalkan flicker dan mencegah loop navigasi.
+ */
 export function useProtectedRoute() {
   const { isAuthenticated, user, isLoading, logoutAction } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
   const navigationState = useRootNavigationState();
 
-  const currentGroup = segments[0] as string | undefined;
+  const currentGroup = useMemo(() => segments[0] as string | undefined, [segments]);
 
   useEffect(() => {
-    // LOG 1: Cek status masuk ke Hook
-    console.log("[Guard] --- Check Route ---");
-    console.log("[Guard] Info:", {
-      currentGroup: currentGroup ?? "undefined",
-      isAuthenticated,
-      navReady: !!navigationState?.key,
-      isLoading,
-    });
-
-    // Jangan lakukan apapun jika sistem dasar belum siap
-    if (isLoading || !navigationState?.key) {
-      console.log("[Guard] Skip: Auth masih loading atau Navigasi belum siap");
+    const isNavigationReady = !!navigationState?.key;
+    if (isLoading || !isNavigationReady) {
       return;
     }
-
-    // Fungsi navigasi aman untuk menghindari benturan context
-    const safeNavigate = (path: string) => {
-      console.log(`[Guard] Mempersiapkan navigasi ke: ${path}`);
-      setTimeout(() => {
-        console.log(`[Guard] Eksekusi navigasi ke: ${path} (setAfterRender)`);
-        router.replace(path as any);
-      }, 1); // Delay 1ms memindahkan tugas ke event loop berikutnya
-    };
 
     const inAuthGroup = currentGroup === "(auth)";
     const inAdminGroup = currentGroup === "(admin)";
     const inCashierGroup = currentGroup === "(cashier)";
 
-    // LOGIKA REDIRECT
     if (!isAuthenticated) {
       if (!inAuthGroup) {
-        console.log("[Guard] Kondisi: Tidak terautentikasi -> Redirect (auth)");
-        safeNavigate("/(auth)");
+        router.replace("/(auth)");
       }
       return;
     }
 
     if (isAuthenticated && !user?.role) {
-      console.warn("[Guard] Kondisi: Role hilang -> Logout & Redirect");
+      console.error("[Guard] Auth terdeteksi tapi role tidak ditemukan. Memaksa logout.");
       logoutAction();
-      safeNavigate("/(auth)");
+      router.replace("/(auth)");
       return;
     }
 
-    // Role-Based Redirect
-    if (user?.role === "admin") {
+    const userRole = user?.role?.toLowerCase();
+
+    if (userRole === "admin") {
       if (!inAdminGroup) {
-        console.log("[Guard] Kondisi: Admin salah rute -> Redirect (admin)");
-        safeNavigate("/(admin)/(tabs)/home");
+        router.replace("/(admin)/(tabs)/home");
       }
-    } else if (user?.role === "kasir" || user?.role === "karyawan") {
-      // Kita handle kondisi undefined (akar /) sebagai target redirect ke home kasir
+    } else if (userRole === "kasir" || userRole === "karyawan") {
       if (!inCashierGroup) {
-        console.log("[Guard] Kondisi: Kasir salah rute/Akar -> Redirect (cashier)");
-        safeNavigate("/(cashier)/(tabs)/home");
+        router.replace("/(cashier)/(tabs)/home");
       }
     } else {
-      console.error("[Guard] Role tidak dikenali:", user?.role);
+      console.warn("[Guard] Role tidak dikenali:", userRole);
+      logoutAction();
+      router.replace("/(auth)");
     }
-  }, [isAuthenticated, user?.role, currentGroup, isLoading, navigationState?.key]);
+  }, [isAuthenticated, user?.role, currentGroup, isLoading, navigationState?.key, router]);
 }
