@@ -1,12 +1,13 @@
 import ScreenWrapper from "@/components/ScreenWrapper";
 import PageHeader from "@/components/ui/PageHeader";
+import NotificationCardSkeleton from "@/components/ui/skeleton/NotificationCardSkeleton";
 import notificationService from "@/services/notification.service";
 import { FlashList } from "@shopify/flash-list";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { AlertTriangle, CheckCircle2, Clock, Info } from "lucide-react-native";
 import React, { useCallback } from "react";
-import { ActivityIndicator, RefreshControl, Text, TouchableOpacity, View } from "react-native";
+import { RefreshControl, Text, TouchableOpacity, View } from "react-native";
 
 export default function NotificationScreen() {
   const queryClient = useQueryClient();
@@ -37,6 +38,14 @@ export default function NotificationScreen() {
   });
 
   const notifications = data?.data || [];
+
+  useFocusEffect(
+    useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: ["notifications", "list"] });
+
+      queryClient.invalidateQueries({ queryKey: ["notifications", "unread-count"] });
+    }, [queryClient]),
+  );
 
   const getStyle = useCallback((type: string) => {
     switch (type) {
@@ -107,9 +116,11 @@ export default function NotificationScreen() {
           }
         />
 
-        {isLoading ? (
-          <View className="items-center justify-center flex-1">
-            <ActivityIndicator size="large" color="#059669" />
+        {isLoading && notifications.length === 0 ? (
+          <View className="flex-1 px-4 mt-4">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <NotificationCardSkeleton key={i} />
+            ))}
           </View>
         ) : (
           <FlashList
