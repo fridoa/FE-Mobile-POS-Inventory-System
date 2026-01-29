@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { UserCog } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import { Controller } from "react-hook-form";
-import { ActivityIndicator, RefreshControl, StatusBar, Text, View } from "react-native";
+import { RefreshControl, StatusBar, Text, View } from "react-native";
 
 import CashierCard from "@/components/CashierCard";
 import CustomAlert, { CustomAlertProps } from "@/components/CustomAlert";
@@ -13,6 +13,7 @@ import FloatingAddButton from "@/components/ui/FloatingAddButton";
 import FormInput from "@/components/ui/FormInput";
 import PageHeader from "@/components/ui/PageHeader";
 import SearchBar from "@/components/ui/SearchBar";
+import CashierCardSkeleton from "@/components/ui/skeleton/CashierCardSkeleton";
 import { useCashierForm } from "@/hooks/useCashierForm";
 import { useDebounce } from "@/hooks/useDebounce";
 import userService from "@/services/user.service";
@@ -139,9 +140,11 @@ const CashierPage = () => {
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Cari nama atau username..." />
 
         <View className="flex-1 px-6">
-          {isLoading ? (
-            <View className="items-center justify-center flex-1">
-              <ActivityIndicator size="large" color="#059669" />
+          {isLoading && !isRefetching ? (
+            <View className="flex-1">
+              {[1, 2, 3, 4].map((i) => (
+                <CashierCardSkeleton key={i} />
+              ))}
             </View>
           ) : (
             <FlashList
