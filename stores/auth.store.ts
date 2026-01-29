@@ -25,7 +25,6 @@ export const useAuthStore = create<AuthState>()(
 
       loginAction: async (user, accessToken, refreshToken) => {
         await setTokens(accessToken, refreshToken);
-
         set({ user, isAuthenticated: true, isLoading: false });
       },
 
@@ -42,7 +41,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const token = await getToken("access");
           if (!token) {
-            get().logoutAction();
+            set({ isLoading: false, isAuthenticated: false });
             return;
           }
 
@@ -50,8 +49,6 @@ export const useAuthStore = create<AuthState>()(
           const userData = response.data;
 
           if (!userData || !userData.role) {
-            console.error("Critical: Server returned user data without role!", userData);
-
             throw new Error("Invalid User Role from API");
           }
 
@@ -62,18 +59,12 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (err: any) {
           const isNetworkError = err.message === "Network Error" || err.code === "ERR_NETWORK";
-          const isAuthError = err.response?.status === 401 || err.message === "Invalid User Role from API";
 
           if (isNetworkError) {
-            console.log("Offline mode: Using cached user data.");
             set({ isLoading: false });
-          } else if (isAuthError) {
-            console.warn("Session invalid or Data corrupt. Logging out.");
-            get().logoutAction();
           } else {
-            console.error("Unexpected init error:", err);
-
-            set({ isLoading: false });
+            console.warn("Init error, logging out:", err.message);
+            get().logoutAction();
           }
         }
       },

@@ -18,6 +18,7 @@ export interface IApiError {
 export type TRole = "admin" | "kasir";
 
 export interface ITokens {
+  user: IUser;
   accessToken: string;
   refreshToken: string;
 }
