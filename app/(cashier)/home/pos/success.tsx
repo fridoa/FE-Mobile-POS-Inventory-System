@@ -7,7 +7,6 @@ import ScreenWrapper from "@/components/ScreenWrapper";
 import formatRupiah from "@/utils/formatRupiah";
 import { FlashList } from "@shopify/flash-list";
 
-// Interface disesuaikan dengan data yang dikirim dari PaymentScreen
 interface ISuccessItem {
   name: string;
   quantity: number;
