@@ -14,6 +14,7 @@ import "../global.css";
 
 import { registerForPushNotificationsAsync } from "@/lib/notification";
 import authService from "@/services/auth.service";
+import { ActivityIndicator, Image, View } from "react-native";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -40,8 +41,13 @@ const queryClient = new QueryClient({
 
 SplashScreen.preventAutoHideAsync();
 
+function ProtectedRouteHandler() {
+  useProtectedRoute();
+  return null;
+}
+
 function InitialLayout() {
-  const { user, isLoading, initializeAction } = useAuthStore();
+  const { user, isLoading, isInitialized, initializeAction } = useAuthStore();
   const navigationState = useRootNavigationState();
   const [isReady, setIsReady] = useState(false);
   const router = useRouter();
@@ -53,7 +59,7 @@ function InitialLayout() {
       level: ReanimatedLogLevel.warn,
       strict: false,
     });
-  }, []);
+  }, [initializeAction]);
 
   useEffect(() => {
     if (isReady && user) {
@@ -64,7 +70,7 @@ function InitialLayout() {
       });
 
       const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
-        const data = response.notification.request.content.data;
+        const { data } = response.notification.request.content;
         if (data?.productId) {
           router.push({
             pathname: "/(admin)/home/product/editProduct/[_id]",
@@ -75,26 +81,39 @@ function InitialLayout() {
 
       return () => responseSubscription.remove();
     }
-  }, [isReady, user]);
-
-  useProtectedRoute();
+  }, [isReady, user, router]);
 
   useEffect(() => {
     const navigationReady = !!navigationState?.key;
 
-    if (navigationReady && !isLoading) {
+    if (navigationReady && !isLoading && isInitialized) {
       const timer = setTimeout(() => {
         setIsReady(true);
         SplashScreen.hideAsync();
-      }, 50);
+      }, 100);
       return () => clearTimeout(timer);
     }
-  }, [isLoading, navigationState?.key]);
+  }, [isLoading, isInitialized, navigationState?.key]);
 
-  if (!isReady) return null;
+  if (!isReady) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "#059669",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Image source={require("@/assets/images/splash-screen.png")} style={{ width: 250, height: 250, marginBottom: 20 }} resizeMode="contain" />
+        <ActivityIndicator size="large" color="white" />
+      </View>
+    );
+  }
 
   return (
     <GestureHandlerRootView className="flex-1">
+      <ProtectedRouteHandler />
       <Stack screenOptions={{ headerShown: false, animation: "fade_from_bottom" }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(admin)" />
