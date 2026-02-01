@@ -14,7 +14,7 @@ export default function ScannerOverlay() {
   }, []);
 
   const laserStyle = useAnimatedStyle(() => ({
-    top: interpolate(scanPos.value, [0, 1], [10, 260]),
+    top: interpolate(scanPos.value, [0, 1], [0, 248]),
   }));
 
   const cornerStyle = useAnimatedStyle(() => ({
