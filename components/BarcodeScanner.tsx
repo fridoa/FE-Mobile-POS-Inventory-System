@@ -1,7 +1,7 @@
 import { BarcodeScanningResult, CameraView, useCameraPermissions } from "expo-camera";
 import * as Haptics from "expo-haptics";
 import { useEffect, useState } from "react";
-import { Button, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import ScannerOverlay from "./ScannerOverlay";
 
 interface BarcodeScannerProps {
@@ -25,7 +25,9 @@ export default function BarcodeScanner({ onScanned, onClose, isEnabled = true, c
     return (
       <View className="items-center justify-center flex-1 p-5 bg-black">
         <Text className="mb-4 text-lg text-center text-white">Izinkan kamera untuk memindai kode batang.</Text>
-        <Button onPress={requestPermission} title="Izinkan Kamera" />
+        <TouchableOpacity onPress={requestPermission} className="px-4 py-2 bg-blue-600 rounded-full">
+          <Text className="text-white">Izinkan Kamera</Text>
+        </TouchableOpacity>
       </View>
     );
   }
