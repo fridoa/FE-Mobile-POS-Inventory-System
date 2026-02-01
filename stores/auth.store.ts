@@ -10,6 +10,7 @@ interface AuthState {
   user: IUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
   loginAction: (user: IUser, accessToken: string, refreshToken: string) => Promise<void>;
   logoutAction: () => Promise<void>;
   initializeAction: () => Promise<void>;
@@ -22,6 +23,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       isLoading: true,
+      isInitialized: false,
 
       loginAction: async (user, accessToken, refreshToken) => {
         await setTokens(accessToken, refreshToken);
@@ -34,6 +36,10 @@ export const useAuthStore = create<AuthState>()(
       },
 
       initializeAction: async () => {
+        if (get().isInitialized) {
+          return;
+        }
+
         setupAxiosInterceptors(() => {
           get().logoutAction();
         });
@@ -41,7 +47,26 @@ export const useAuthStore = create<AuthState>()(
         try {
           const token = await getToken("access");
           if (!token) {
-            set({ isLoading: false, isAuthenticated: false });
+            set({ isLoading: false, isAuthenticated: false, isInitialized: true });
+            return;
+          }
+
+          const currentState = get();
+          if (currentState.user && currentState.isAuthenticated) {
+            set({ isLoading: false, isInitialized: true });
+
+            authService
+              .getProfile()
+              .then((response) => {
+                const userData = response.data;
+                if (userData && userData.role) {
+                  set({ user: userData });
+                }
+              })
+              .catch((err) => {
+                console.warn("[AUTH] Background profile refresh failed:", err.message);
+              });
+
             return;
           }
 
@@ -56,12 +81,14 @@ export const useAuthStore = create<AuthState>()(
             user: userData,
             isAuthenticated: true,
             isLoading: false,
+            isInitialized: true,
           });
         } catch (err: any) {
           const isNetworkError = err.message === "Network Error" || err.code === "ERR_NETWORK";
 
           if (isNetworkError) {
-            set({ isLoading: false });
+            const currentState = get();
+            set({ isLoading: false, isInitialized: true, isAuthenticated: currentState.isAuthenticated && !!currentState.user });
           } else {
             console.warn("Init error, logging out:", err.message);
             get().logoutAction();
