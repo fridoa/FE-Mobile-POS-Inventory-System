@@ -1,4 +1,3 @@
-import { LinearGradient } from "expo-linear-gradient";
 import React, { memo } from "react";
 import { Text, useWindowDimensions, View } from "react-native";
 
@@ -15,23 +14,28 @@ const StatCard = memo(({ title, value, icon, trend, isPrimary = false }: StatCar
 
   if (isPrimary) {
     return (
-      // Gunakan w-full agar otomatis mengikuti padding parent (AdminHomeContent)
-      <LinearGradient colors={["#059669", "#10b981"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="p-6 rounded-[32px] shadow-2xl shadow-emerald-600/40 mb-4 w-full overflow-hidden">
-        <View className="flex-row items-start justify-between mb-4">
-          <View className="p-3 bg-white/20 rounded-2xl">{icon}</View>
-          {trend && (
-            <View className="px-3 py-1 rounded-full bg-white/30">
-              <Text className="text-white text-[10px] font-bold">{trend}</Text>
-            </View>
-          )}
+      <View className="mb-12 mt-2 mx-2">
+        <View className="absolute inset-0 bg-blue-500 rounded-[32px] transform -rotate-6 translate-y-2 opacity-60" />
+        
+        <View className="absolute inset-0 bg-rose-500 rounded-[32px] transform -rotate-3 translate-y-1 opacity-80" />
+        
+        <View className="bg-emerald-500 p-6 rounded-[32px] shadow-xl shadow-emerald-500/30">
+          <View className="flex-row items-start justify-between mb-4">
+            <View className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">{icon}</View>
+            {trend && (
+              <View className="px-3 py-1 rounded-full bg-white/30">
+                <Text className="text-white text-[10px] font-bold">{trend}</Text>
+              </View>
+            )}
+          </View>
+          <View>
+            <Text className="text-xs font-bold tracking-widest uppercase text-emerald-100">Total Omzet</Text>
+            <Text className="mt-1 text-3xl font-black text-white" numberOfLines={1} adjustsFontSizeToFit>
+              {value}
+            </Text>
+          </View>
         </View>
-        <View>
-          <Text className="text-xs font-medium tracking-widest uppercase text-white/80">{title}</Text>
-          <Text className="mt-1 text-3xl font-black text-white" numberOfLines={1} adjustsFontSizeToFit>
-            {value}
-          </Text>
-        </View>
-      </LinearGradient>
+      </View>
     );
   }
 

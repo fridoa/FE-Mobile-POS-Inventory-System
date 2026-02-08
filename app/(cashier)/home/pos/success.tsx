@@ -28,7 +28,6 @@ export default function SuccessScreen() {
     }
   }, [data]);
 
-  // Hitung total hemat (total diskon) untuk ditampilkan di struk
   const totalSavings = useMemo(() => {
     if (!transaction) return 0;
     return transaction.items.reduce((acc: number, item: ISuccessItem) => acc + item.discountAmount * item.quantity, 0);

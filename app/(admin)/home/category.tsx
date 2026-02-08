@@ -7,6 +7,7 @@ import { RefreshControl, StatusBar, Text, View } from "react-native";
 
 import CategoryCard from "@/components/CategoryCard";
 import CustomAlert, { CustomAlertProps } from "@/components/CustomAlert";
+import OfflineBanner from "@/components/OfflineBanner";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import ActionModal from "@/components/ui/ActionModal";
 import FloatingAddButton from "@/components/ui/FloatingAddButton";
@@ -48,9 +49,9 @@ const CategoryPage = () => {
       return response.data?.data || [];
     },
     staleTime: 1000 * 60 * 60,
-    gcTime: 1000 * 60 * 60 * 24 * 7,
+    gcTime: 1000 * 60 * 60 * 24, // 24 jam - kategori jarang berubah
     placeholderData: keepPreviousData,
-    refetchOnMount: "always",
+    // refetchOnMount: "always" dihapus - agar cache bisa digunakan saat offline
   });
 
   const filteredData = useMemo(() => {
@@ -152,6 +153,7 @@ const CategoryPage = () => {
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
         <PageHeader title="Manajemen Kategori" />
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Cari kategori..." />
+        <OfflineBanner message="Mode offline. Data kategori dari cache lokal." />
 
         <View className="flex-1 px-6">
           {isLoading ? (

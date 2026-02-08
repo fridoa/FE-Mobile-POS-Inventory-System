@@ -1,9 +1,3 @@
-import { FlashList } from "@shopify/flash-list";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { ChevronRight, Filter, ShoppingBag } from "lucide-react-native";
-import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, StatusBar, Text, TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import HistoryFilterModal from "@/components/HistoryFilterModal";
 import HistoryItem from "@/components/HistoryItem";
 import TransactionDetailModal from "@/components/TransactionDetailModal";
@@ -11,6 +5,13 @@ import HistoryItemSkeleton from "@/components/ui/skeleton/HistoryItemSkeleton";
 import transactionService, { ITransactionHistoryItem } from "@/services/transaction.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { FilterType, useHistoryStore } from "@/stores/history.store";
+import { FlashList } from "@shopify/flash-list";
+import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
+import { useFocusEffect } from "expo-router";
+import { ChevronRight, Filter, ShoppingBag } from "lucide-react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { ActivityIndicator, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function HistoryScreen() {
   const insets = useSafeAreaInsets();
@@ -37,7 +38,17 @@ export default function HistoryScreen() {
       return currentPage < totalPages ? currentPage + 1 : undefined;
     },
     enabled: !!user?._id,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
+    placeholderData: keepPreviousData,
+    refetchOnMount: "always",
   });
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const flatData = useMemo(() => data?.pages.flatMap((page) => page.data) || [], [data]);
 

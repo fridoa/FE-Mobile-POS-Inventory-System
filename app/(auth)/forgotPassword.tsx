@@ -42,7 +42,7 @@ export default function ForgotPasswordScreen() {
           </View>
 
           <View className="mt-10">
-            <Text className="mb-2 font-semibold text-gray-700">Email Admin</Text>
+            <Text className="mb-2 font-semibold text-gray-700">Email</Text>
             <Controller
               control={control}
               name="email"
@@ -63,7 +63,7 @@ export default function ForgotPasswordScreen() {
           </View>
 
           <TouchableOpacity onPress={onSubmit} disabled={isLoading} activeOpacity={0.8} className={`mt-8 py-4 rounded-2xl items-center shadow-sm ${isLoading ? "bg-gray-300" : "bg-emerald-600"}`}>
-            <Text className="text-lg font-bold text-white">{isLoading ? "Memproses..." : "Kirim Instruksi"}</Text>
+            <Text className="text-lg font-bold text-white">{isLoading ? "Memproses..." : "Kirim"}</Text>
           </TouchableOpacity>
 
           {/* Notifikasi Custom */}

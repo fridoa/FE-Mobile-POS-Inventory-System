@@ -4,6 +4,7 @@ import { PackageSearch, Plus } from "lucide-react-native";
 import React, { useCallback, useState } from "react";
 import { RefreshControl, Text, TouchableOpacity, View } from "react-native";
 
+import OfflineBanner from "@/components/OfflineBanner";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import PageHeader from "@/components/ui/PageHeader";
 import ProductCard from "@/components/ui/ProductCard";
@@ -32,7 +33,7 @@ export default function ProductScreen() {
     queryFn: () => productService.getProduct({ search: debouncedSearch }),
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 30,
-    gcTime: 1000 * 60 * 60 * 24 * 7,
+    gcTime: 1000 * 60 * 60 * 12,
   });
 
   const handleEditProduct = useCallback((id: string) => {
@@ -57,6 +58,7 @@ export default function ProductScreen() {
       <View className="flex-1 bg-white">
         <PageHeader title="Inventaris Produk" />
         <SearchBar placeholder="Cari nama produk atau SKU..." value={searchQuery} onChangeText={setSearchQuery} />
+        <OfflineBanner message="Mode offline. Data produk dari cache lokal." />
 
         <View className="flex-1 px-4 mt-2">
           {isLoading && !isRefetching ? (

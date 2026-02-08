@@ -12,6 +12,9 @@ export default function EditProductScreen() {
     queryKey: ["products", _id],
     queryFn: () => productService.getProductById(_id!),
     enabled: !!_id,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
+    placeholderData: (previousData) => previousData,
   });
 
   if (isLoading) {

@@ -1,5 +1,5 @@
 import { FlashList } from "@shopify/flash-list";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { UserCog } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import { Controller } from "react-hook-form";
@@ -71,6 +71,10 @@ const CashierPage = () => {
       const response = await userService.getCashiers();
       return response.data?.data || [];
     },
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
+    placeholderData: keepPreviousData,
+    refetchOnMount: "always",
   });
 
   const filteredData = useMemo(() => {

@@ -1,18 +1,20 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
-import { ArrowLeft, CheckCircle2 } from "lucide-react-native";
+import { CheckCircle2 } from "lucide-react-native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
-
 import ScreenWrapper from "@/components/ScreenWrapper";
+import PageHeader from "@/components/ui/PageHeader";
 import transactionService, { ICreateTransactionPayload } from "@/services/transaction.service";
+import { useAuthStore } from "@/stores/auth.store";
 import { CartItem, useCartStore } from "@/stores/cart.store";
 import formatRupiah from "@/utils/formatRupiah";
 
 export default function PaymentScreen() {
   const queryClient = useQueryClient();
   const router = useRouter();
+  const { user } = useAuthStore();
   const { cart, getTotalPrice, clearCart } = useCartStore();
   const totalPrice = getTotalPrice();
   const animation = useRef<LottieView>(null);
@@ -27,9 +29,10 @@ export default function PaymentScreen() {
   const isValid = receivedAmount >= totalPrice;
 
   const suggestions = useMemo(() => {
-    const raw = [totalPrice, Math.ceil(totalPrice / 5000) * 5000, Math.ceil(totalPrice / 10000) * 10000, Math.ceil(totalPrice / 50000) * 50000, 100000];
+    const safeTotal = Math.ceil(totalPrice);
+    const raw = [safeTotal, Math.ceil(safeTotal / 5000) * 5000, Math.ceil(safeTotal / 10000) * 10000, Math.ceil(safeTotal / 50000) * 50000, 100000];
     return [...new Set(raw)]
-      .filter((amt) => amt >= totalPrice)
+      .filter((amt) => amt >= safeTotal)
       .sort((a, b) => a - b)
       .slice(0, 4);
   }, [totalPrice]);
@@ -57,15 +60,29 @@ export default function PaymentScreen() {
       animation.current?.play();
 
       const successData = {
-        invoiceNumber: serverTransaction?.invoiceNumber,
-        totalPrice: totalPrice,
-        receivedAmount: receivedAmount,
-        returnAmount: returnAmount,
-        items: cart.map((item) => ({
-          name: item.name,
-          qty: item.qty,
-          subtotal: (item.price ?? 0) * item.qty,
-        })),
+        invoiceNumber: serverTransaction?.transactionNumber || "INV-PROCESSING",
+        transaction_date: serverTransaction?.createdAt || new Date().toISOString(),
+        total_price: serverTransaction?.totalAmount || totalPrice,
+        money_receive: serverTransaction?.payAmount || receivedAmount,
+        money_return: serverTransaction?.changeAmount || returnAmount,
+        cashier_name: serverTransaction?.cashierId?.name || user?.username || "Kasir",
+        items: serverTransaction?.items
+          ? serverTransaction.items.map((item: any) => ({
+              name: item.name,
+              quantity: item.quantity,
+              basePrice: item.basePrice || item.price,
+              price: item.price,
+              discountAmount: item.discount || 0,
+              subtotal: item.subtotal,
+            }))
+          : cart.map((item) => ({
+              name: item.name,
+              quantity: item.qty,
+              basePrice: item.price || 0,
+              price: item.price || 0,
+              discountAmount: 0,
+              subtotal: (item.price ?? 0) * item.qty,
+            })),
       };
 
       setTimeout(() => {
@@ -88,13 +105,7 @@ export default function PaymentScreen() {
   return (
     <ScreenWrapper bg="#F9FAFB">
       {/* HEADER */}
-      <View className="flex-row items-center justify-between px-6 py-4 bg-white border-b border-gray-100">
-        <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
-          <ArrowLeft size={24} color="#374151" />
-        </TouchableOpacity>
-        <Text className="text-lg font-bold text-gray-800">Pembayaran Tunai</Text>
-        <View className="w-10" />
-      </View>
+      <PageHeader title="Pembayaran Tunai" />
 
       <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
         <View className="items-center py-8">

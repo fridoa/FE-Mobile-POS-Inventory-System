@@ -1,3 +1,4 @@
+import OfflineBanner from "@/components/OfflineBanner";
 import { RestockCard } from "@/components/restockCard";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import PageHeader from "@/components/ui/PageHeader";
@@ -32,6 +33,7 @@ export default function RestockScreen() {
       <View className="flex-1 bg-gray-50">
         <StatusBar barStyle="dark-content" />
         <PageHeader title="Manajemen Restock" />
+        <OfflineBanner message="Mode offline. Data stok mungkin tidak akurat." />
 
         {isLoading ? (
           <View className="flex-1 px-4 mt-4">

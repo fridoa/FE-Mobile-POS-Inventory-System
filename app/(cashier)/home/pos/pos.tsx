@@ -1,5 +1,6 @@
 import BarcodeScanner from "@/components/BarcodeScanner";
 import CustomAlert, { CustomAlertProps } from "@/components/CustomAlert";
+import OfflineBanner from "@/components/OfflineBanner";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import PageHeader from "@/components/ui/PageHeader";
 import SearchBar from "@/components/ui/SearchBar";
@@ -142,6 +143,8 @@ const POSScreen = () => {
             <Text className="text-[10px] text-emerald-600 font-bold italic">Mencari produk...</Text>
           </View>
         )}
+
+        <OfflineBanner message="Koneksi terputus. Checkout tidak tersedia saat offline." />
 
         <FlashList
           data={cart}

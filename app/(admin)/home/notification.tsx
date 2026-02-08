@@ -16,10 +16,9 @@ export default function NotificationScreen() {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["notifications", "list"],
     queryFn: () => notificationService.findAll(1, 50),
-    staleTime: 1000 * 30,
-    gcTime: 1000 * 60 * 60 * 24 * 7,
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 60 * 2,
     placeholderData: (previousData) => previousData,
-    refetchOnMount: "always",
   });
 
   const markAllReadMutation = useMutation({

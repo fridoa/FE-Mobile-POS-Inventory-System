@@ -35,6 +35,10 @@ const CashierHomePage = () => {
   const { data: recentTransactionsRes, isLoading: isRecentLoading } = useQuery({
     queryKey: ["transactions", "recent-home"],
     queryFn: () => transactionService.getAll({ limit: 5 }),
+    staleTime: 1000 * 60,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
+    placeholderData: (prev) => prev,
+    refetchOnMount: "always",
   });
 
   useFocusEffect(
@@ -73,7 +77,7 @@ const CashierHomePage = () => {
         {isLoadingInitial ? (
           <CashierHomeSkeleton />
         ) : (
-          <View className="px-6 pt-6">
+          <View className="px-4 pt-6">
             {/* STATS */}
             <StatCard isPrimary title="Omzet Saya Hari Ini" value={formatRupiah(stats?.totalRevenue || 0)} icon={<Banknote size={24} color="white" />} trend={`${stats?.totalTransactions || 0} Transaksi`} />
 
@@ -94,7 +98,7 @@ const CashierHomePage = () => {
             {/* QUICK MENU */}
             <Text className="mb-4 ml-1 text-[11px] font-black tracking-[2px] text-slate-400 uppercase">Akses Cepat</Text>
             <View className="flex-row justify-between mb-8">
-              <QuickMenuButton label="Cek Stok" icon={<PackageSearch size={20} color="#f97316" />} bgColor="bg-orange-50" onPress={() => router.push("/(cashier)/(tabs)/inventory")} />
+              <QuickMenuButton label="Cari Produk" icon={<PackageSearch size={20} color="#f97316" />} bgColor="bg-orange-50" onPress={() => router.push("/(cashier)/(tabs)/inventory")} />
               <QuickMenuButton label="Riwayat" icon={<History size={20} color="#3b82f6" />} bgColor="bg-blue-50" onPress={() => router.push("/(cashier)/(tabs)/history")} />
             </View>
 
