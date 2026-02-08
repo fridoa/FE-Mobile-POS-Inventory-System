@@ -33,7 +33,7 @@ export default function RestockScreen() {
       <View className="flex-1 bg-gray-50">
         <StatusBar barStyle="dark-content" />
         <PageHeader title="Manajemen Restock" />
-        <OfflineBanner message="Mode offline. Data stok mungkin tidak akurat." />
+        <OfflineBanner message="Mode offline. Daftar ini dari cache, tetap bisa jadi referensi belanja." />
 
         {isLoading ? (
           <View className="flex-1 px-4 mt-4">
