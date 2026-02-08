@@ -1,5 +1,5 @@
 import NavigationBar, { NavItem } from "@/components/NavigationBar";
-import { createMaterialTopTabNavigator, MaterialTopTabNavigationEventMap, MaterialTopTabNavigationProp } from "@react-navigation/material-top-tabs";
+import { createMaterialTopTabNavigator, MaterialTopTabNavigationProp } from "@react-navigation/material-top-tabs";
 import { ParamListBase, TabNavigationState } from "@react-navigation/native";
 import { usePathname, withLayoutContext } from "expo-router";
 import { History, ScanLine, Store, User } from "lucide-react-native";
@@ -52,7 +52,6 @@ export default function TabLayout() {
           navigationRef.current = navigation;
           return {
             state: (e) => {
-              
               const state = e.data.state as TabNavigationState<ParamListBase>;
               if (state?.index !== undefined) {
                 handleIndexChange(state.index);
