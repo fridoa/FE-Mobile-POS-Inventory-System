@@ -1,7 +1,7 @@
 import { useDebounce } from "@/hooks/useDebounce";
 import categoryService from "@/services/category.service";
 import { FlashList } from "@shopify/flash-list";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ChevronDown, Tag, X } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import { ActivityIndicator, Modal, Text, TouchableOpacity, View } from "react-native";
@@ -24,6 +24,9 @@ const CategoryPicker = ({ value, onChange, error }: CategoryPickerProps) => {
       const response = await categoryService.getCategory(debouncedSearch);
       return response.data?.data || [];
     },
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24 * 7,
+    placeholderData: keepPreviousData,
   });
 
   const filteredCategories = useMemo(() => {

@@ -26,8 +26,8 @@ export const useRestock = () => {
   } = useQuery<IProduct[]>({
     queryKey: ["products", "low-stock"],
     queryFn: async () => productService.getProduct({ stockStatus: "low", limit: 50 }),
-    staleTime: 1000 * 30,
-    gcTime: 1000 * 60 * 60 * 24 * 7,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 60 * 6,
     placeholderData: (previousData) => previousData,
   });
 

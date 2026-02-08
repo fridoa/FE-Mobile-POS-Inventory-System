@@ -12,7 +12,6 @@ import productService from "@/services/product.service";
 import { IProduct } from "@/types/Product";
 import Toast from "react-native-toast-message";
 
-// 1. Schema harus sinkron dengan Backend (basePrice, costPrice, discount)
 const productSchema = yup.object().shape({
   name: yup.string().required("Nama produk wajib diisi"),
   category: yup.string().required("Kategori wajib dipilih"),

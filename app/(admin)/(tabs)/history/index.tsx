@@ -1,17 +1,19 @@
-import { FlashList } from "@shopify/flash-list";
-import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
-import { ChevronRight, Filter, ShoppingBag } from "lucide-react-native";
-import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, StatusBar, Text, TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import HistoryFilterModal from "@/components/HistoryFilterModal";
 import HistoryItem from "@/components/HistoryItem";
+import OfflineBanner from "@/components/OfflineBanner";
 import TransactionDetailModal from "@/components/TransactionDetailModal";
 import HistoryItemSkeleton from "@/components/ui/skeleton/HistoryItemSkeleton";
 import transactionService, { ITransactionHistoryItem } from "@/services/transaction.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { FilterType, useHistoryStore } from "@/stores/history.store";
+import { FlashList } from "@shopify/flash-list";
+import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 import { format, subDays } from "date-fns";
+import { useFocusEffect } from "expo-router";
+import { ChevronRight, Filter, ShoppingBag } from "lucide-react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { ActivityIndicator, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ROLES = {
   ADMIN: "ADMIN",
@@ -46,10 +48,15 @@ export default function HistoryScreen() {
     },
     enabled: !!user?._id,
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 60 * 24 * 7,
+    gcTime: 1000 * 60 * 60 * 4,
     placeholderData: keepPreviousData,
-    refetchOnMount: "always",
   });
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch]),
+  );
 
   const flatData = useMemo(() => data?.pages.flatMap((page) => page.data) || [], [data]);
 
@@ -104,6 +111,7 @@ export default function HistoryScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: "#F8FAFC", paddingTop: insets.top }}>
       <StatusBar barStyle="dark-content" />
+      <OfflineBanner message="Mode offline. Riwayat transaksi mungkin tidak lengkap." />
 
       <View className="px-6 py-4 bg-white border-b border-slate-100">
         <View className="flex-row items-center justify-between mb-4">

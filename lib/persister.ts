@@ -4,5 +4,5 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 export const asyncStoragePersister = createAsyncStoragePersister({
   storage: AsyncStorage,
   key: "TOKO_INTAN_OFFLINE_CACHE",
-  throttleTime: 1000,
+  throttleTime: 2000,
 });

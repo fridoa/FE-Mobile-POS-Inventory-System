@@ -6,14 +6,14 @@ export const useSalesReport = (filters: { startDate?: string; endDate?: string }
     queryKey: ["sales-reports", "summary", filters],
     queryFn: () => reportService.getSalesSummary(filters),
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 60 * 24 * 7,
+    gcTime: 1000 * 60 * 60 * 4,
   });
 
   const topProductsQuery = useQuery({
     queryKey: ["sales-reports", "top-products", filters],
     queryFn: () => reportService.getTopProducts({ ...filters, limit: 10 }),
     staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 60 * 24 * 7,
+    gcTime: 1000 * 60 * 60 * 4,
   });
 
   return {
