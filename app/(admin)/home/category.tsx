@@ -15,12 +15,14 @@ import FormInput from "@/components/ui/FormInput";
 import PageHeader from "@/components/ui/PageHeader";
 import SearchBar from "@/components/ui/SearchBar";
 import CategoryCardSkeleton from "@/components/ui/skeleton/CategoryCardSkeleton";
+import { useDeferredRender } from "@/hooks/useAfterInteraction";
 import { useCategoryForm } from "@/hooks/useCategoryForm";
 import { useDebounce } from "@/hooks/useDebounce";
 import categoryService from "@/services/category.service";
 import { ICategory } from "@/types/Category";
 
 const CategoryPage = () => {
+  const isListReady = useDeferredRender();
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ICategory | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,10 +51,11 @@ const CategoryPage = () => {
       return response.data?.data || [];
     },
     staleTime: 1000 * 60 * 60,
-    gcTime: 1000 * 60 * 60 * 24, // 24 jam - kategori jarang berubah
+    gcTime: 1000 * 60 * 60 * 24,
     placeholderData: keepPreviousData,
-    // refetchOnMount: "always" dihapus - agar cache bisa digunakan saat offline
   });
+
+  const showSkeleton = !isListReady || (isLoading && !data);
 
   const filteredData = useMemo(() => {
     const list = Array.isArray(data) ? data : [];
@@ -156,7 +159,7 @@ const CategoryPage = () => {
         <OfflineBanner message="Mode offline. Data kategori dari cache lokal." />
 
         <View className="flex-1 px-6">
-          {isLoading ? (
+          {showSkeleton ? (
             <View className="flex-1">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <CategoryCardSkeleton key={i} />
@@ -167,6 +170,7 @@ const CategoryPage = () => {
               data={filteredData}
               renderItem={renderItem}
               keyExtractor={keyExtractor}
+              drawDistance={100}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 100 }}
               refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} colors={["#3b82f6"]} />}
