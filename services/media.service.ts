@@ -22,6 +22,12 @@ const mediaService = {
 
     return response.data.data;
   },
+
+  deleteImage: async (fileId: string): Promise<void> => {
+    await instance.delete(endpoint.MEDIA_REMOVE, {
+      data: { fileId },
+    });
+  },
 };
 
 export default mediaService;
