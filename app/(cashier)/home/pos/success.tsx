@@ -131,7 +131,7 @@ export default function SuccessScreen() {
         </View>
 
         {/* ACTION BUTTONS */}
-        <View className="px-6 mt-10 mb-10 space-y-4">
+        <View className="px-6 mt-10 mb-10 space-y-4 gap-y-4">
           <TouchableOpacity className="flex-row items-center justify-center py-5 shadow-lg bg-emerald-700 rounded-2xl shadow-emerald-200" onPress={() => router.replace("/(cashier)/(tabs)/home")}>
             <Home size={20} color="white" />
             <Text className="ml-3 text-base font-black text-white">Selesai & Kembali</Text>
