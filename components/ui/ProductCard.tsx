@@ -1,7 +1,8 @@
 import { IProduct } from "@/types/Product";
+import { Image } from "expo-image";
 import { Package } from "lucide-react-native";
 import { memo } from "react";
-import { Image, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 interface ProductCardProps {
   item: IProduct;
@@ -17,7 +18,16 @@ function ProductCard({ item }: ProductCardProps) {
     <View className="flex-row items-center p-3 mb-3 bg-white border border-gray-100 shadow-sm rounded-2xl">
       {/* BAGIAN GAMBAR & BADGE DISKON */}
       <View className="relative items-center justify-center w-20 h-20 overflow-hidden bg-gray-50 rounded-xl">
-        {item.imageUrl ? <Image source={{ uri: item.imageUrl }} className="w-full h-full" resizeMode="cover" /> : <Package size={28} color="#D1D5DB" />}
+        {item.imageUrl ? (
+          <Image 
+            source={{ uri: item.imageUrl }}
+            style={{ width: '100%', height: '100%' }}
+            contentFit="cover"
+            transition={200}
+          />
+        ) : (
+          <Package size={28} color="#D1D5DB" />
+        )}
 
         {/* Badge Diskon hanya tampil jika > 0 */}
         {hasDiscount && (
