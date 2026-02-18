@@ -1,15 +1,15 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
-import LottieView from "lottie-react-native";
-import { CheckCircle2 } from "lucide-react-native";
-import React, { useCallback, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 import ScreenWrapper from "@/components/ScreenWrapper";
 import PageHeader from "@/components/ui/PageHeader";
 import transactionService, { ICreateTransactionPayload } from "@/services/transaction.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { CartItem, useCartStore } from "@/stores/cart.store";
 import formatRupiah from "@/utils/formatRupiah";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import LottieView from "lottie-react-native";
+import { CheckCircle2 } from "lucide-react-native";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 export default function PaymentScreen() {
   const queryClient = useQueryClient();
@@ -40,11 +40,23 @@ export default function PaymentScreen() {
   const handleProcessPayment = useCallback(async () => {
     if (!isValid) return;
 
+    // Validasi cart sebelum mengirim
+    const invalidItems = cart.filter((item) => !item._id);
+    if (invalidItems.length > 0) {
+      Alert.alert("Error", "Terdapat produk yang tidak valid dalam keranjang. Silakan coba tambahkan ulang produk.");
+      return;
+    }
+
+    if (cart.length === 0) {
+      Alert.alert("Error", "Keranjang kosong. Silakan tambahkan produk terlebih dahulu.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const payload: ICreateTransactionPayload = {
       items: cart.map((item: CartItem) => ({
-        productId: item._id || "",
+        productId: item._id!,
         quantity: item.qty,
       })),
       payAmount: receivedAmount,
@@ -54,7 +66,14 @@ export default function PaymentScreen() {
       const response = await transactionService.create(payload);
       const serverTransaction = response.data;
 
-      await Promise.all([queryClient.invalidateQueries({ queryKey: ["sales-summary"] }), queryClient.invalidateQueries({ queryKey: ["transactions"] }), queryClient.invalidateQueries({ queryKey: ["products"] })]);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["sales-summary"] }),
+        queryClient.invalidateQueries({ queryKey: ["sales-reports"] }),
+        queryClient.invalidateQueries({ queryKey: ["transactions"] }),
+        queryClient.invalidateQueries({ queryKey: ["products"] }),
+        queryClient.invalidateQueries({ queryKey: ["products", "low-stock"] }),
+        queryClient.invalidateQueries({ queryKey: ["notifications", "unread-count"] }),
+      ]);
 
       setShowSuccessAnim(true);
       animation.current?.play();
@@ -95,8 +114,24 @@ export default function PaymentScreen() {
         } as any);
       }, 2000);
     } catch (error: any) {
-      const errorMsg = error?.response?.data?.meta?.message || "Terjadi kesalahan server";
-      Alert.alert("Transaksi Gagal", errorMsg);
+      console.log("Transaction Error:", JSON.stringify(error?.response?.data, null, 2));
+
+      const status = error?.response?.status;
+      const errorMsg = error?.response?.data?.meta?.message || error?.message || "Terjadi kesalahan server";
+
+      if (status === 401) {
+        Alert.alert("Sesi Berakhir", "Silakan login ulang dan coba lagi.");
+      } else if (status === 400) {
+        Alert.alert("Data Tidak Valid", errorMsg);
+      } else if (status === 404) {
+        Alert.alert("Produk Tidak Ditemukan", "Beberapa produk mungkin sudah tidak tersedia. Silakan refresh keranjang.");
+      } else if (error?.code === "ECONNABORTED" || error?.message?.includes("timeout")) {
+        Alert.alert("Koneksi Timeout", "Server terlalu lama merespons. Silakan coba lagi.");
+      } else if (!error?.response) {
+        Alert.alert("Koneksi Bermasalah", "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.");
+      } else {
+        Alert.alert("Transaksi Gagal", errorMsg);
+      }
     } finally {
       setIsSubmitting(false);
     }
