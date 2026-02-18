@@ -10,6 +10,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import ProductCard from "@/components/ui/ProductCard";
 import SearchBar from "@/components/ui/SearchBar";
 import ProductCardSkeleton from "@/components/ui/skeleton/ProductCardSkeleton";
+import { useDeferredRender } from "@/hooks/useAfterInteraction";
 import { useDebounce } from "@/hooks/useDebounce";
 import productService from "@/services/product.service";
 import { IProduct } from "@/types/Product";
@@ -19,6 +20,7 @@ const LIST_CONTENT_STYLE = { paddingBottom: 100, paddingTop: 10 };
 
 export default function ProductScreen() {
   const router = useRouter();
+  const isListReady = useDeferredRender();
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 500);
 
@@ -34,7 +36,10 @@ export default function ProductScreen() {
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60 * 30,
     gcTime: 1000 * 60 * 60 * 12,
+    refetchOnMount: "always", // Auto-refresh saat kembali ke screen
   });
+
+  const showSkeleton = !isListReady || (isLoading && !products);
 
   const handleEditProduct = useCallback((id: string) => {
     router.push({
@@ -61,13 +66,13 @@ export default function ProductScreen() {
         <OfflineBanner message="Mode offline. Data produk dari cache lokal." />
 
         <View className="flex-1 px-4 mt-2">
-          {isLoading && !isRefetching ? (
+          {showSkeleton ? (
             <View className="flex-1">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </View>
-          ) : isError ? (
+          ) : isError && !products ? (
             <View className="items-center justify-center flex-1 p-6">
               <Text className="mb-2 text-lg font-bold text-gray-800">Gagal Memuat Data</Text>
               <TouchableOpacity onPress={() => refetch()} className="px-6 py-2 bg-emerald-600 rounded-xl">
@@ -79,6 +84,7 @@ export default function ProductScreen() {
               data={products}
               keyExtractor={keyExtractor}
               renderItem={renderItem}
+              drawDistance={100}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={LIST_CONTENT_STYLE}
               refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} colors={["#059669"]} />}
