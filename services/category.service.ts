@@ -5,7 +5,10 @@ import endpoint from "./endpoint.constant";
 type CategoryPayload = Omit<ICategory, "_id" | "createdAt" | "updatedAt">;
 
 const categoryService = {
-  getCategory: (params?: string) => instance.get(params ? `${endpoint.CATEGORY}?${params}` : endpoint.CATEGORY),
+  getCategory: (params?: string) => {
+    const query = params ? `search=${params}&limit=100` : "limit=100";
+    return instance.get(`${endpoint.CATEGORY}?${query}`);
+  },
 
   createCategory: (payload: CategoryPayload) => instance.post(endpoint.CATEGORY, payload),
 
