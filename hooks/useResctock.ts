@@ -28,6 +28,7 @@ export const useRestock = () => {
     queryFn: async () => productService.getProduct({ stockStatus: "low", limit: 50 }),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 60 * 6,
+    refetchOnMount: "always",
     placeholderData: (previousData) => previousData,
   });
 
