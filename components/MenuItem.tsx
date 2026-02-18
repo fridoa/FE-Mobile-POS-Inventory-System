@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useCallback, useRef } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 interface MenuItemProps {
@@ -10,9 +10,21 @@ interface MenuItemProps {
 }
 
 const MenuItem = memo(({ title, icon: Icon, onPress, color = "bg-emerald-50", badge }: MenuItemProps) => {
+  const isNavigating = useRef(false);
+
+  const handlePress = useCallback(() => {
+    if (isNavigating.current) return;
+    isNavigating.current = true;
+    onPress();
+    // Reset setelah 500ms agar bisa navigasi lagi nanti
+    setTimeout(() => {
+      isNavigating.current = false;
+    }, 500);
+  }, [onPress]);
+
   return (
     <View className="items-center w-1/4 mb-6">
-      <TouchableOpacity onPress={onPress} className={`w-14 h-14 ${color} rounded-2xl items-center justify-center shadow-sm mb-2 relative`} activeOpacity={0.7}>
+      <TouchableOpacity onPress={handlePress} className={`w-14 h-14 ${color} rounded-2xl items-center justify-center shadow-sm mb-2 relative`} activeOpacity={0.7}>
         <Icon size={24} color="#059669" strokeWidth={2} />
 
         {badge !== undefined && badge > 0 && (
