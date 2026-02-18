@@ -1,17 +1,31 @@
 import * as Network from "expo-network";
-import { useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 interface NetworkStatus {
   isConnected: boolean;
   isInternetReachable: boolean;
   type: Network.NetworkStateType | null;
+  isOffline: boolean;
+  isChecking: boolean;
 }
 
-export const useNetworkStatus = () => {
-  const [networkStatus, setNetworkStatus] = useState<NetworkStatus>({
+const defaultNetworkStatus: NetworkStatus = {
+  isConnected: true,
+  isInternetReachable: true,
+  type: null,
+  isOffline: false,
+  isChecking: true,
+};
+
+// Context untuk share network status ke seluruh app (singleton pattern)
+const NetworkStatusContext = createContext<NetworkStatus>(defaultNetworkStatus);
+
+// Provider component - hanya jalankan 1x di root layout
+export const NetworkStatusProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [networkStatus, setNetworkStatus] = useState({
     isConnected: true,
     isInternetReachable: true,
-    type: null,
+    type: null as Network.NetworkStateType | null,
   });
   const [isChecking, setIsChecking] = useState(true);
 
@@ -41,8 +55,8 @@ export const useNetworkStatus = () => {
     // Check immediately
     checkNetwork();
 
-    // Poll every 5 seconds for network changes
-    intervalId = setInterval(checkNetwork, 5000);
+    // Poll every 10 seconds (increased from 5s for better performance)
+    intervalId = setInterval(checkNetwork, 10000);
 
     return () => {
       isMounted = false;
@@ -50,11 +64,19 @@ export const useNetworkStatus = () => {
     };
   }, []);
 
-  const isOffline = !networkStatus.isConnected || !networkStatus.isInternetReachable;
+  const value = useMemo<NetworkStatus>(
+    () => ({
+      ...networkStatus,
+      isOffline: !networkStatus.isConnected || !networkStatus.isInternetReachable,
+      isChecking,
+    }),
+    [networkStatus, isChecking],
+  );
 
-  return {
-    ...networkStatus,
-    isOffline,
-    isChecking,
-  };
+  return React.createElement(NetworkStatusContext.Provider, { value }, children);
+};
+
+// Hook untuk consume network status - tidak ada polling di sini, hanya baca dari context
+export const useNetworkStatus = (): NetworkStatus => {
+  return useContext(NetworkStatusContext);
 };
