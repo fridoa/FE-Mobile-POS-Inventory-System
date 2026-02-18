@@ -14,12 +14,14 @@ import FormInput from "@/components/ui/FormInput";
 import PageHeader from "@/components/ui/PageHeader";
 import SearchBar from "@/components/ui/SearchBar";
 import CashierCardSkeleton from "@/components/ui/skeleton/CashierCardSkeleton";
+import { useDeferredRender } from "@/hooks/useAfterInteraction";
 import { useCashierForm } from "@/hooks/useCashierForm";
 import { useDebounce } from "@/hooks/useDebounce";
 import userService from "@/services/user.service";
 import { IUser } from "@/types/User";
 
 const CashierPage = () => {
+  const isListReady = useDeferredRender();
   const [modalVisible, setModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState<IUser | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,10 +73,9 @@ const CashierPage = () => {
       const response = await userService.getCashiers();
       return response.data?.data || [];
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 60 * 24,
     gcTime: 1000 * 60 * 60 * 24 * 7,
     placeholderData: keepPreviousData,
-    refetchOnMount: "always",
   });
 
   const filteredData = useMemo(() => {
@@ -144,7 +145,7 @@ const CashierPage = () => {
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Cari nama atau username..." />
 
         <View className="flex-1 px-6">
-          {isLoading && !isRefetching ? (
+          {!isListReady || (isLoading && !data) ? (
             <View className="flex-1">
               {[1, 2, 3, 4].map((i) => (
                 <CashierCardSkeleton key={i} />
@@ -155,6 +156,7 @@ const CashierPage = () => {
               data={filteredData}
               renderItem={({ item }) => <CashierCard item={item} onEdit={handleEdit} onDelete={handleDelete} />}
               keyExtractor={(item) => item._id || item.username}
+              drawDistance={100}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingBottom: 100 }}
               refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} colors={["#059669"]} />}
