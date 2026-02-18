@@ -5,16 +5,16 @@ export default function AdminLayout() {
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: "fade",
-        animationMatchesGesture: true,
+        animation: "slide_from_right",
         gestureEnabled: true,
-        contentStyle: { backgroundColor: "#F9FAFB" },
+        freezeOnBlur: true,
+        contentStyle: { backgroundColor: "#FFFFFF" },
       }}
     >
       <Stack.Screen
         name="(tabs)"
         options={{
-          animation: "fade",
+          animation: "none",
         }}
       />
     </Stack>

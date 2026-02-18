@@ -1,4 +1,5 @@
 import { toast as toastConfig } from "@/components/toast";
+import { NetworkStatusProvider } from "@/hooks/useNetworkStatus";
 import { useProtectedRoute } from "@/hooks/useProtectedRoute";
 import { asyncStoragePersister } from "@/lib/persister";
 import { useAuthStore } from "@/stores/auth.store";
@@ -127,21 +128,23 @@ const PERSISTABLE_QUERY_KEYS = ["products", "categories"];
 
 export default function RootLayout() {
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{
-        persister: asyncStoragePersister,
-        maxAge: 1000 * 60 * 60 * 24,
-        dehydrateOptions: {
-          shouldDehydrateQuery: (query) => {
-            const queryKey = query.queryKey[0] as string;
-            return query.state.status === "success" && PERSISTABLE_QUERY_KEYS.includes(queryKey);
+    <NetworkStatusProvider>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister: asyncStoragePersister,
+          maxAge: 1000 * 60 * 60 * 24,
+          dehydrateOptions: {
+            shouldDehydrateQuery: (query) => {
+              const queryKey = query.queryKey[0] as string;
+              return query.state.status === "success" && PERSISTABLE_QUERY_KEYS.includes(queryKey);
+            },
           },
-        },
-      }}
-    >
-      <InitialLayout />
-      <Toast config={toastConfig} />
-    </PersistQueryClientProvider>
+        }}
+      >
+        <InitialLayout />
+        <Toast config={toastConfig} />
+      </PersistQueryClientProvider>
+    </NetworkStatusProvider>
   );
 }
