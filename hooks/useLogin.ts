@@ -10,7 +10,7 @@ import Toast from "react-native-toast-message";
 import * as yup from "yup";
 
 const loginSchema = yup.object().shape({
-  username: yup.string().required("Username wajib diisi").min(3, "Username minimal 3 karakter"),
+  username: yup.string().required("Username wajib diisi").min(3, "Username minimal 3 karakter").trim(),
   password: yup.string().required("Password wajib diisi").min(6, "Password minimal 6 karakter"),
 });
 
