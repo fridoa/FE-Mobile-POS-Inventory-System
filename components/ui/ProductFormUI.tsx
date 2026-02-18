@@ -36,9 +36,9 @@ const ProductFormUI = ({ initialData }: ProductFormUIProps) => {
     onConfirm: () => {},
   });
 
-  const { control, handleSubmit, errors, pickImage, selectedImage, isSubmitting, showScanner, setShowScanner, handleScan, isDirty } = useProductForm(initialData);
+  const { control, handleSubmit, errors, pickImage, selectedImage, isSubmitting, showScanner, setShowScanner, handleScan, isDirty, deleteImage, isDeleting: isDeletingImage } = useProductForm(initialData);
 
-  const { deleteProduct, isDeleting } = useDeleteProduct();
+  const { deleteProduct, isDeleting: isDeletingProduct } = useDeleteProduct();
 
   const onBack = () => {
     if (isDirty) {
@@ -71,16 +71,43 @@ const ProductFormUI = ({ initialData }: ProductFormUIProps) => {
       <ScrollView className="flex-1 p-4" showsVerticalScrollIndicator={false}>
         {/* Foto Produk */}
         <View className="items-center mb-6">
-          <TouchableOpacity onPress={pickImage} className="items-center justify-center w-32 h-32 overflow-hidden bg-white border border-gray-200 border-dashed shadow-sm rounded-3xl">
-            {selectedImage ? (
-              <Image source={{ uri: selectedImage }} className="w-full h-full" />
-            ) : (
-              <View className="items-center">
-                <ImageIcon size={32} color="#9CA3AF" />
-                <Text className="mt-1 text-[10px] text-gray-400 font-medium">Tambah Foto</Text>
-              </View>
+          <View style={{ position: 'relative', width: 128, height: 128 }}>
+            <TouchableOpacity onPress={pickImage} className="items-center justify-center w-32 h-32 overflow-hidden bg-white border border-gray-200 border-dashed shadow-sm rounded-3xl">
+              {selectedImage ? (
+                <Image source={{ uri: selectedImage }} className="w-full h-full" />
+              ) : (
+                <View className="items-center">
+                  <ImageIcon size={32} color="#9CA3AF" />
+                  <Text className="mt-1 text-[10px] text-gray-400 font-medium">Tambah Foto</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            
+            {/* Trash icon - bottom left corner overlay */}
+            {isEdit && selectedImage && !selectedImage.startsWith('file://') && (
+              <TouchableOpacity
+                onPress={deleteImage}
+                disabled={isDeletingImage}
+                style={{
+                  position: 'absolute',
+                  bottom: 4,
+                  right: 4,
+                  backgroundColor: '#ef4444',
+                  borderRadius: 999,
+                  padding: 8,
+                  zIndex: 10,
+                  elevation: 5,
+                }}
+                activeOpacity={0.7}
+              >
+                {isDeletingImage ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Trash2 size={16} color="#FFFFFF" />
+                )}
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Informasi Dasar */}
@@ -96,7 +123,18 @@ const ProductFormUI = ({ initialData }: ProductFormUIProps) => {
           {!!errors.name && <Text className="mt-1 text-xs text-red-500">{errors.name.message as string}</Text>}
 
           <Text className="mt-4 mb-2 text-xs font-semibold text-gray-500">Kategori *</Text>
-          <Controller control={control} name="category" render={({ field: { onChange, value } }) => <CategoryPicker value={value} onChange={onChange} error={errors.category?.message as string} />} />
+          <Controller 
+            control={control} 
+            name="category" 
+            render={({ field: { onChange, value } }) => (
+              <CategoryPicker 
+                value={value} 
+                onChange={onChange} 
+                error={errors.category?.message as string} 
+                initialLabel={initialData?.category && typeof initialData.category === 'object' ? initialData.category.name : undefined}
+              />
+            )} 
+          />
 
           <Text className="mt-4 mb-2 text-xs font-semibold text-gray-500">Harga Jual *</Text>
           <View className={`flex-row items-center p-1 border rounded-xl bg-gray-50 ${errors.basePrice ? "border-red-500" : "border-gray-100"}`}>
@@ -132,7 +170,7 @@ const ProductFormUI = ({ initialData }: ProductFormUIProps) => {
               />
               <Text className="mb-2 text-xs font-semibold text-gray-500">SKU / Barcode *</Text>
               <View className="flex-row items-center border border-gray-100 rounded-xl bg-gray-50">
-                <Controller control={control} name="sku" render={({ field: { onChange, value } }) => <TextInput className="flex-1 p-3" placeholder="Scan atau ketik" onChangeText={onChange} value={value} />} />
+                <Controller control={control} name="sku" render={({ field: { onChange, value } }) => <TextInput className="flex-1 p-3" placeholder="Scan atau ketik" onChangeText={onChange} value={value ?? ""} />} />
                 <TouchableOpacity onPress={() => setShowScanner(true)} className="p-3">
                   <ScanLine size={22} color="#059669" />
                 </TouchableOpacity>
@@ -247,16 +285,16 @@ const ProductFormUI = ({ initialData }: ProductFormUIProps) => {
       {/* Footer Buttons */}
       <View className="flex-row gap-3 p-4 bg-white border-t border-gray-100">
         {isEdit && (
-          <TouchableOpacity onPress={confirmDelete} disabled={isDeleting || isSubmitting} activeOpacity={0.7} className="items-center justify-center px-5 border border-red-100 bg-red-50 rounded-2xl">
-            {isDeleting ? <ActivityIndicator size="small" color="#ef4444" /> : <Trash2 size={22} color="#ef4444" />}
+          <TouchableOpacity onPress={confirmDelete} disabled={isDeletingProduct || isSubmitting} activeOpacity={0.7} className="items-center justify-center px-5 border border-red-100 bg-red-50 rounded-2xl">
+            {isDeletingProduct ? <ActivityIndicator size="small" color="#ef4444" /> : <Trash2 size={22} color="#ef4444" />}
           </TouchableOpacity>
         )}
 
         <TouchableOpacity
           onPress={handleSubmit}
-          disabled={isSubmitting || isDeleting}
+          disabled={isSubmitting || isDeletingProduct}
           activeOpacity={0.8}
-          className={`flex-1 py-4 rounded-2xl items-center shadow-lg ${isSubmitting || isDeleting ? "bg-gray-300" : "bg-emerald-600 shadow-emerald-200"}`}
+          className={`flex-1 py-4 rounded-2xl items-center shadow-lg ${isSubmitting || isDeletingProduct ? "bg-gray-300" : "bg-emerald-600 shadow-emerald-200"}`}
         >
           {isSubmitting ? (
             <View className="flex-row items-center justify-center">
