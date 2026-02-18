@@ -34,6 +34,7 @@ export const useProductForm = (initialData?: IProduct) => {
   const [showScanner, setShowScanner] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(initialData?.imageUrl || null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     control,
@@ -62,8 +63,16 @@ export const useProductForm = (initialData?: IProduct) => {
       }
       return productService.createProduct(payload);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
+    onSuccess: async () => {
+      // Invalidate and immediately refetch all product queries
+      await queryClient.invalidateQueries({ 
+        queryKey: ["products"],
+        refetchType: "all"
+      });
+      await queryClient.refetchQueries({
+        queryKey: ["products"],
+        type: "all"
+      });
       Toast.show({ type: "success", text1: "Berhasil", text2: `Produk diperbarui` });
       router.back();
     },
@@ -76,7 +85,7 @@ export const useProductForm = (initialData?: IProduct) => {
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
@@ -95,23 +104,52 @@ export const useProductForm = (initialData?: IProduct) => {
     setShowScanner(false);
   };
 
+  const deleteImage = async () => {
+    // If no fileId, just clear from UI (orphan image case)
+    if (!initialData?.imageFileId) {
+      setSelectedImage(null);
+      Toast.show({ type: "success", text1: "Berhasil", text2: "Gambar dihapus" });
+      return;
+    }
+    
+    setIsDeleting(true);
+    try {
+      await mediaService.deleteImage(initialData.imageFileId);
+      setSelectedImage(null);
+      Toast.show({ type: "success", text1: "Berhasil", text2: "Gambar berhasil dihapus" });
+    } catch (error) {
+      Toast.show({ type: "error", text1: "Error", text2: "Gagal menghapus gambar" });
+      console.error(error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const onSubmit = async (data: ProductFormData) => {
     let finalImageData = {
       imageUrl: initialData?.imageUrl || "",
       imageFileId: initialData?.imageFileId || "",
     };
 
-    if (selectedImage && selectedImage.startsWith("file://")) {
-      setIsUploading(true);
-      try {
-        const uploadResult = await mediaService.uploadImage(selectedImage);
-        finalImageData.imageUrl = uploadResult.url;
-        finalImageData.imageFileId = uploadResult.fileId;
-      } catch (error) {
+    if (!selectedImage) {
+      // Image deleted
+      finalImageData.imageUrl = "";
+      finalImageData.imageFileId = "";
+    } else if (selectedImage !== initialData?.imageUrl) {
+      // New image selected
+      if (selectedImage.startsWith("file://")) {
+        setIsUploading(true);
+        try {
+          const uploadResult = await mediaService.uploadImage(selectedImage);
+          finalImageData.imageUrl = uploadResult.url;
+          finalImageData.imageFileId = uploadResult.fileId;
+        } catch (error) {
+          setIsUploading(false);
+          Toast.show({ type: "error", text1: "Upload Gagal", text2: "Gagal mengupload gambar baru" });
+          return;
+        }
         setIsUploading(false);
-        return;
       }
-      setIsUploading(false);
     }
 
     const payload = {
@@ -140,5 +178,7 @@ export const useProductForm = (initialData?: IProduct) => {
     handleScan,
     isEdit,
     isDirty,
+    deleteImage,
+    isDeleting,
   };
 };
