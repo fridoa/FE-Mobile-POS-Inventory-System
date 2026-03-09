@@ -11,10 +11,18 @@ import ProductRankingSkeleton from "@/components/ui/skeleton/Report/ProductRanki
 import { useDateFilter } from "@/hooks/useDateFilter";
 import { useDebounce } from "@/hooks/useDebounce";
 import reportService, { IReportResponse, ITopProduct } from "@/services/report.service";
+import { useLocalSearchParams } from "expo-router";
 
 export default function RankingsScreen() {
+  const { startDate, endDate } = useLocalSearchParams<{ startDate?: string; endDate?: string }>();
   const { getRange } = useDateFilter();
-  const filters = useMemo(() => getRange("month"), [getRange]);
+  
+  const filters = useMemo(() => {
+    if (startDate && endDate) {
+      return { startDate, endDate };
+    }
+    return getRange("month");
+  }, [startDate, endDate, getRange]);
 
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("totalQty");

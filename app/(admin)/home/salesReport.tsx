@@ -128,7 +128,7 @@ export default function SalesReportScreen() {
             </>
           )}
 
-          <TouchableOpacity onPress={() => router.push("/(admin)/home/rankingScreen")} className="flex-row items-center justify-between h-20 px-5 mx-5 bg-white border border-l-4 shadow-sm border-l-emerald-500 border-slate-100 rounded-2xl">
+          <TouchableOpacity onPress={() => router.push({ pathname: "/(admin)/home/rankingScreen", params: { startDate: filters.startDate, endDate: filters.endDate } })} className="flex-row items-center justify-between h-20 px-5 mx-5 bg-white border border-l-4 shadow-sm border-l-emerald-500 border-slate-100 rounded-2xl">
             <View className="flex-row items-center">
               <Trophy size={20} color="#059669" />
               <View className="ml-4">
