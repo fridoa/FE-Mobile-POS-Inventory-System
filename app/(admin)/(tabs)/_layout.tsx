@@ -46,7 +46,7 @@ export default function TabLayout() {
           tabBarStyle: { display: "none" },
           swipeEnabled: isRootTab,
           lazy: true,
-          animationEnabled: true,
+          animationEnabled: false,
         }}
         screenListeners={({ navigation }) => {
           navigationRef.current = navigation;
