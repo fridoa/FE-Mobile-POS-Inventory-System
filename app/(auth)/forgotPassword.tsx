@@ -6,6 +6,17 @@ import React, { useState } from "react";
 import { Controller } from "react-hook-form";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
+const ADMIN_ONLY_FORGOT_PASSWORD_MESSAGE = "Fitur lupa password hanya tersedia untuk akun admin.";
+
+const mapForgotPasswordErrorMessage = (message: string) => {
+  const normalized = message.toLowerCase();
+  if (normalized.includes("akun admin") || normalized.includes("tidak ditemukan") || normalized.includes("not found")) {
+    return ADMIN_ONLY_FORGOT_PASSWORD_MESSAGE;
+  }
+
+  return message;
+};
+
 export default function ForgotPasswordScreen() {
   const [alert, setAlert] = useState({
     visible: false,
@@ -26,7 +37,7 @@ export default function ForgotPasswordScreen() {
       setAlert({
         visible: true,
         title: "Gagal",
-        message: msg,
+        message: mapForgotPasswordErrorMessage(msg),
         type: "danger",
       }),
   );
@@ -39,6 +50,7 @@ export default function ForgotPasswordScreen() {
           <View className="mt-8">
             <Text className="text-3xl font-bold text-emerald-800">Lupa Password?</Text>
             <Text className="mt-2 text-base text-gray-500">Masukkan email terdaftar untuk menerima tautan pemulihan kata sandi.</Text>
+            <Text className="mt-2 text-xs font-semibold text-amber-700">Catatan: fitur ini hanya berlaku untuk akun admin.</Text>
           </View>
 
           <View className="mt-10">
