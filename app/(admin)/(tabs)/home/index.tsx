@@ -7,6 +7,7 @@ import { HomeSalesReportSkeleton } from "@/components/ui/skeleton/AdminHome/Home
 import { MenuGridSkeleton } from "@/components/ui/skeleton/AdminHome/MenuGridSkeleton";
 
 import { StatCardSkeleton } from "@/components/ui/skeleton/AdminHome/StatCardSkeleton";
+import { useRestock } from "@/hooks/useResctock";
 import notificationService from "@/services/notification.service";
 import reportService from "@/services/report.service";
 import { useAuthStore } from "@/stores/auth.store";
@@ -35,6 +36,7 @@ export default function AdminHomePage() {
 const AdminHomeContent = memo(() => {
   const router = useRouter();
   const { user, logoutAction } = useAuthStore();
+  const { products: lowStockProducts } = useRestock();
   const insets = useSafeAreaInsets();
   const [isLogoutAlertVisible, setIsLogoutAlertVisible] = useState(false);
   const handleLogoutPress = () => {
@@ -49,7 +51,7 @@ const AdminHomeContent = memo(() => {
       duration: 600,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [fadeAnim]);
 
   const {
     data: reportResponse,
@@ -101,7 +103,7 @@ const AdminHomeContent = memo(() => {
               )}
 
               <View className="flex-row items-center justify-between mt-4 mb-6 ml-1">
-                <Text className="text-[11px] font-black tracking-[2px] text-slate-400 uppercase">Laporan Penjualan</Text>
+                <Text className="text-[11px] font-black tracking-[2px] text-slate-400 uppercase">Laporan Transaksi</Text>
                 <TouchableOpacity onPress={() => router.push("/(admin)/home/salesReport")} className="flex-row items-center">
                   <Text className="text-[10px] font-bold text-emerald-600 mr-1">Detail</Text>
                   <ChevronRight size={14} color="#059669" />
@@ -118,7 +120,7 @@ const AdminHomeContent = memo(() => {
                   <MenuItem title="Produk" icon={Box} onPress={() => router.push("/(admin)/home/product")} />
                   <MenuItem title="Kategori" icon={Layers} onPress={() => router.push("/(admin)/home/category")} />
                   <MenuItem title="Kasir" icon={UserCog} onPress={() => router.push("/(admin)/home/cashier")} />
-                  <MenuItem title="Restock" icon={PackagePlus} color="bg-orange-50" onPress={() => router.push("/(admin)/home/restock")} />
+                  <MenuItem title="Restock" icon={PackagePlus} color="bg-orange-50" badge={lowStockProducts.length} onPress={() => router.push("/(admin)/home/restock")} />
                 </View>
               )}
             </>
