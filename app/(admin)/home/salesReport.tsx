@@ -86,7 +86,7 @@ export default function SalesReportScreen() {
   return (
     <ScreenWrapper>
       <View className="flex-1 bg-slate-50">
-        <PageHeader title="Analisis Penjualan" />
+        <PageHeader title="Laporan Transaksi" />
 
         {/* SECTION: FILTER DROPDOWN */}
         <View className="px-5 mb-4 ">
@@ -133,7 +133,7 @@ export default function SalesReportScreen() {
               <Trophy size={20} color="#059669" />
               <View className="ml-4">
                 <Text className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Overview</Text>
-                <Text className="text-base font-bold text-slate-800">Cek Produk Terlaris</Text>
+                <Text className="text-base font-bold text-slate-800">Laporan Detail Produk</Text>
               </View>
             </View>
 

@@ -101,7 +101,7 @@ export default function RankingsScreen() {
   return (
     <ScreenWrapper>
       <View className="flex-1 bg-white">
-        <PageHeader title="Ranking Produk" />
+        <PageHeader title="Laporan Detail Produk" />
 
         {/* HEADER CONTROLS */}
         <View className="bg-white border-b border-slate-100">

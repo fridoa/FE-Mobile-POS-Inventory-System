@@ -63,7 +63,7 @@ const CashierHomePage = () => {
             <Text className="text-lg font-black text-emerald-700">{user?.username?.substring(0, 1).toUpperCase() || "K"}</Text>
           </View>
           <View className="ml-3">
-            <Text className="text-[10px] font-black tracking-[1px] text-emerald-600/60 uppercase">Shift Aktif</Text>
+            <Text className="text-[10px] font-black tracking-[1px] text-emerald-600/60 uppercase">Toko Intan</Text>
             <Text className="text-xl font-black leading-6 text-slate-800">{user?.username || "Kasir"}</Text>
           </View>
         </View>
