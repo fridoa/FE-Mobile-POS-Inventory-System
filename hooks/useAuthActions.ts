@@ -21,7 +21,9 @@ export const resetPasswordSchema = Yup.object().shape({
 export type TForgotPassword = Yup.InferType<typeof forgotPasswordSchema>;
 export type TResetPassword = Yup.InferType<typeof resetPasswordSchema>;
 
-export const useForgotPasswordHook = (onSuccess: () => void, onError: (msg: string) => void) => {
+const extractErrorMessage = (err: any, fallback: string) => err?.response?.data?.message || err?.response?.data?.meta?.message || fallback;
+
+export const useForgotPasswordHook = (onSuccess: (msg: string) => void, onError: (msg: string) => void) => {
   const form = useForm<TForgotPassword>({
     resolver: yupResolver(forgotPasswordSchema),
     defaultValues: { email: "" },
@@ -29,8 +31,8 @@ export const useForgotPasswordHook = (onSuccess: () => void, onError: (msg: stri
 
   const mutation = useMutation({
     mutationFn: (payload: TForgotPassword) => authService.forgotPassword(payload),
-    onSuccess: () => onSuccess(),
-    onError: (err: any) => onError(err?.response?.data?.message || "Terjadi kesalahan"),
+    onSuccess: (res) => onSuccess(res?.meta?.message || "Permintaan berhasil diproses."),
+    onError: (err: any) => onError(extractErrorMessage(err, "Terjadi kesalahan")),
   });
 
   const onSubmit = form.handleSubmit((data) => mutation.mutate(data));
@@ -47,7 +49,7 @@ export const useResetPasswordHook = (token: string, onSuccess: () => void, onErr
   const mutation = useMutation({
     mutationFn: (payload: TResetPassword) => authService.resetPassword(payload),
     onSuccess: () => onSuccess(),
-    onError: (err: any) => onError(err?.response?.data?.message || "Token kadaluarsa"),
+    onError: (err: any) => onError(extractErrorMessage(err, "Token kadaluarsa")),
   });
 
   const onSubmit = form.handleSubmit((data) => mutation.mutate(data));
